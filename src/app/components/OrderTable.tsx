@@ -7,6 +7,7 @@ interface Order {
   id: string;
   customer_name: string;
   product_name: string;
+  delivery_address: string;
   status: string;
   created_at: string;
   total_amount: number;
@@ -16,21 +17,20 @@ interface OrdersTableProps {
   rows: Order[];
 }
 
-// Function to determine color based on status
 const getStatusColor = (status: string) => {
-  switch (status.toUpperCase()) {
+  switch (status?.toUpperCase()) {
     case 'CREATED':
-      return { bg: 'rgba(59, 130, 246, 0.1)', text: '#2563eb', border: 'rgba(59, 130, 246, 0.2)' }; 
+      return { bg: 'rgba(59, 130, 246, 0.1)', text: '#2563eb', border: 'rgba(59, 130, 246, 0.2)' };
     case 'PROCESSING':
-      return { bg: 'rgba(245, 158, 11, 0.1)', text: '#d97706', border: 'rgba(245, 158, 11, 0.2)' }; 
+      return { bg: 'rgba(245, 158, 11, 0.1)', text: '#d97706', border: 'rgba(245, 158, 11, 0.2)' };
     case 'SHIPPED':
-      return { bg: 'rgba(139, 92, 246, 0.1)', text: '#7c3aed', border: 'rgba(139, 92, 246, 0.2)' }; 
+      return { bg: 'rgba(139, 92, 246, 0.1)', text: '#7c3aed', border: 'rgba(139, 92, 246, 0.2)' };
     case 'DELIVERED':
-      return { bg: 'rgba(34, 197, 94, 0.1)', text: '#16a34a', border: 'rgba(34, 197, 94, 0.2)' }; 
+      return { bg: 'rgba(34, 197, 94, 0.1)', text: '#16a34a', border: 'rgba(34, 197, 94, 0.2)' };
     case 'CANCELED':
-      return { bg: 'rgba(239, 68, 68, 0.1)', text: '#dc2626', border: 'rgba(239, 68, 68, 0.2)' };  
+      return { bg: 'rgba(239, 68, 68, 0.1)', text: '#dc2626', border: 'rgba(239, 68, 68, 0.2)' };
     default:
-      return { bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb' }; 
+      return { bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb' };
   }
 };
 
@@ -45,19 +45,23 @@ const columns: GridColDef[] = [
   {
     field: 'product_name',
     headerName: 'Product',
-    width: 300,
-    resizable: true
+    minWidth: 220,
   },
   {
     field: 'customer_name',
     headerName: 'Customer',
-    width: 250,
-    resizable: true,
+    minWidth: 200,
+  },
+  {
+    field: 'delivery_address',
+    headerName: 'Address',
+    minWidth: 220,
   },
   {
     field: 'status',
     headerName: 'Status',
     width: 130,
+    resizable: false,
     renderCell: (params) => {
       const style = getStatusColor(params.value);
       return (
@@ -72,9 +76,6 @@ const columns: GridColDef[] = [
             color: style.text,
             border: `1px solid ${style.border}`,
             borderRadius: '6px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            '& .MuiChip-label': { px: 1.5 },
           }}
         />
       );
@@ -83,26 +84,27 @@ const columns: GridColDef[] = [
   {
     field: 'created_at',
     headerName: 'Date',
-    width: 150,
+    width: 130,
+    resizable: false,
     valueGetter: (value) => value ? new Date(value) : null,
     valueFormatter: (value) => {
       if (!value) return '';
       return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(value);
     },
-    resizable: false,
   },
   {
     field: 'total_amount',
     headerName: 'Amount',
-    width: 180,
+    width: 120,
     align: 'right',
     headerAlign: 'right',
     renderCell: (params) => (
-      <Typography sx={{ fontWeight: 600 }}>
-        ${params.value?.toFixed(2)}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '100%', width: '100%' }}>
+        <Typography sx={{ fontWeight: 700 }}>
+          ${params.value?.toFixed(2)}
+        </Typography>
+      </Box>
     ),
-    resizable: true,
   },
 ];
 
@@ -131,8 +133,10 @@ export default function OrdersTable({ rows }: OrdersTableProps) {
                 />
               </Box>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{order.customer_name}</Typography>
-              <Typography variant="body2" color="textSecondary">{order.product_name}</Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+              <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>{order.product_name}</Typography>
+              <Typography variant="caption" color="textSecondary" display="block">{order.delivery_address}</Typography>
+
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, alignItems: 'flex-end' }}>
                 <Typography variant="body2">{new Date(order.created_at).toLocaleDateString()}</Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>${order.total_amount.toFixed(2)}</Typography>
               </Box>
@@ -144,7 +148,7 @@ export default function OrdersTable({ rows }: OrdersTableProps) {
   }
 
   return (
-    <Box sx={{ width: '100%', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', mt: 3 }}>
+    <Box sx={{ width: '100%', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', mt: 3, overflow: 'hidden' }}>
       <Box sx={{ p: 2.5, borderBottom: '1px solid #f0f0f0' }}>
         <Typography variant="h6" sx={{ fontWeight: 700 }}>All Orders</Typography>
         <Typography variant="body2" color="textSecondary">{rows.length} orders total</Typography>
@@ -159,10 +163,15 @@ export default function OrdersTable({ rows }: OrdersTableProps) {
           '& .MuiDataGrid-columnHeaderTitle': {
             fontWeight: 'bold',
             color: '#666'
+          },
+          '& .MuiDataGrid-cell': {
+            borderBottom: '1px solid #f5f5f5'
           }
         }}
-        initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-        pageSizeOptions={[10, 20, 50, 100]}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 10 } }
+        }}
+        pageSizeOptions={[10, 20, 50]}
       />
     </Box>
   );

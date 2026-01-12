@@ -1,10 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { TextField, Button, Box, Typography, MenuItem, SxProps, Theme } from "@mui/material";
+import { TextField, Button, Box, Typography, MenuItem, SxProps, Theme, CircularProgress } from "@mui/material";
 import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, LocalOfferOutlined, HomeOutlined } from "@mui/icons-material";
-import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import { createOrderAction } from "@/app/actions/orders";
 
 type OrderFormData = {
     product_name: string;
@@ -29,65 +30,40 @@ const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType<{ sx?: S
 );
 
 export default function OrderForm({ onClose }: OrderFormProps) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm<OrderFormData>({
+    const [isLoading, setIsLoading] = useState(false);
+    const { register, handleSubmit, formState: { errors } } = useForm<OrderFormData>({
         defaultValues: {
             quantity: 1,
             price_per_unit: 0,
             status: 'CREATED'
         }
     });
-    const router = useRouter();
 
     const onSubmit = async (data: OrderFormData) => {
-        const { error } = await supabase.from("orders").insert([
-            {
-                product_name: data.product_name,
-                customer_name: data.customer_name,
-                quantity: Number(data.quantity),
-                price_per_unit: Number(data.price_per_unit),
-                delivery_address: data.delivery_address,
-                status: data.status
+        setIsLoading(true);
+        try {
+            const result = await createOrderAction(data);
+            if (result.success) {
+                toast.success(result.message);
+                onClose();
+            } else {
+                toast.error(result.message || "Failed to create order");
             }
-        ]);
-
-        if (error) {
-            alert("Error: " + error.message);
-        } else {
-            reset();
-            router.refresh();
-            onClose();
+        } catch (error) {
+            toast.error("An unexpected error occurred");
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <Box
-            component="form"
-            onSubmit={handleSubmit(onSubmit)}
-            sx={{
-                p: { xs: 1, sm: 2 },
-                width: '100%',
-                '& .MuiOutlinedInput-root': {
-                    borderRadius: '8px',
-                    backgroundColor: '#fff',
-                },
-                '& .MuiFormHelperText-root': {
-                    color: '#ef4444',
-                    marginLeft: 0,
-                    fontWeight: 500
-                },
-                '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                    display: 'block',
-                    opacity: 1,
-                }
-            }}
-        >
+        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ p: { xs: 1, sm: 2 }, width: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-
-                {/* Customer Name */}
                 <Box>
                     <LabelWithIcon icon={PersonOutline} label="Customer Name" />
                     <TextField
                         fullWidth
+                        disabled={isLoading}
                         placeholder="Enter customer name"
                         {...register("customer_name", { required: "Customer name is required", minLength: 2 })}
                         error={!!errors.customer_name}
@@ -95,11 +71,11 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     />
                 </Box>
 
-                {/* Product */}
                 <Box>
                     <LabelWithIcon icon={ShoppingBagOutlined} label="Product" />
                     <TextField
                         fullWidth
+                        disabled={isLoading}
                         placeholder="Enter product name"
                         {...register("product_name", { required: "Product name is required" })}
                         error={!!errors.product_name}
@@ -107,17 +83,14 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     />
                 </Box>
 
-                {/* Quantity and Price Row */}
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    gap: 2
-                }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
                     <Box sx={{ flex: 1 }}>
                         <LabelWithIcon icon={NumbersOutlined} label="Quantity" />
                         <TextField
                             fullWidth
                             type="number"
+                            disabled={isLoading}
+                            inputProps={{ min: 1 }}
                             {...register("quantity", { required: true, min: 1 })}
                             error={!!errors.quantity}
                         />
@@ -127,19 +100,20 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                         <TextField
                             fullWidth
                             type="number"
-                            inputProps={{ step: "0.01" }}
-                            {...register("price_per_unit", { required: "Price is required", min: 0.01 })}
+                            disabled={isLoading}
+                            inputProps={{ step: "0.01", min: 0 }}
+                            {...register("price_per_unit", { required: "Price is required", min: 0 })}
                             error={!!errors.price_per_unit}
                             helperText={errors.price_per_unit?.message}
                         />
                     </Box>
                 </Box>
 
-                {/* Delivery Address */}
                 <Box>
                     <LabelWithIcon icon={HomeOutlined} label="Delivery Address" />
                     <TextField
                         fullWidth
+                        disabled={isLoading}
                         placeholder="Enter full delivery address"
                         {...register("delivery_address", { required: "Delivery address is required" })}
                         error={!!errors.delivery_address}
@@ -147,56 +121,25 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     />
                 </Box>
 
-                {/* Status */}
                 <Box>
                     <LabelWithIcon icon={LocalOfferOutlined} label="Status" />
-                    <TextField
-                        select
-                        fullWidth
-                        defaultValue="CREATED"
-                        {...register("status")}
-                    >
+                    <TextField select fullWidth disabled={isLoading} defaultValue="CREATED" {...register("status")}>
                         <MenuItem value="CREATED">Created</MenuItem>
                         <MenuItem value="PROCESSING">Processing</MenuItem>
                     </TextField>
                 </Box>
 
-                {/* Action Buttons */}
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: { xs: 'column-reverse', sm: 'row' },
-                    justifyContent: 'flex-end',
-                    gap: 1.5,
-                    mt: 1
-                }}>
-                    <Button
-                        onClick={onClose}
-                        fullWidth={false}
-                        sx={{
-                            color: '#374151',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            px: 3,
-                            width: { xs: '100%', sm: 'auto' },
-                            '&:hover': { backgroundColor: '#f3f4f6' }
-                        }}
-                    >
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column-reverse', sm: 'row' }, justifyContent: 'flex-end', gap: 1.5, mt: 1 }}>
+                    <Button onClick={onClose} disabled={isLoading} sx={{ color: '#374151', textTransform: 'none', fontWeight: 600 }}>
                         Cancel
                     </Button>
                     <Button
                         type="submit"
                         variant="contained"
-                        sx={{
-                            backgroundColor: '#0f172a',
-                            borderRadius: '8px',
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            px: 3,
-                            width: { xs: '100%', sm: 'auto' },
-                            '&:hover': { backgroundColor: '#1e293b' }
-                        }}
+                        disabled={isLoading}
+                        sx={{ backgroundColor: '#0f172a', borderRadius: '8px', textTransform: 'none', fontWeight: 600, px: 3, minWidth: '140px' }}
                     >
-                        Create Order
+                        {isLoading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : "Create Order"}
                     </Button>
                 </Box>
             </Box>

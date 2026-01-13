@@ -95,13 +95,19 @@ export default function OrdersPage() {
                     </Button>
                 </Box>
 
-                <OrdersTable rows={orders} />
+                <OrdersTable rows={orders} onRefresh={fetchOrders} />
 
                 <Dialog
                     open={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     fullWidth
                     maxWidth="sm"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                        }
+                    }}
                 >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2 }}>
                         <DialogTitle sx={{ fontWeight: 800, fontSize: '1.25rem' }}>

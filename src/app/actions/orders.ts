@@ -19,6 +19,17 @@ export async function createOrderAction(formData: any) {
         return { success: false, message: error.message };
     }
 
-    revalidatePath("/orders"); 
+    revalidatePath("/orders");
     return { success: true, message: "Order successfully created!" };
+}
+
+export async function deleteOrderAction(orderId: string) {
+    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    revalidatePath("/orders");
+    return { success: true, message: "Order deleted successfully" };
 }

@@ -33,3 +33,26 @@ export async function deleteOrderAction(orderId: string) {
     revalidatePath("/orders");
     return { success: true, message: "Order deleted successfully" };
 }
+
+export async function updateOrderAction(orderId: string, formData: any) {
+    const { error } = await supabase
+        .from("orders")
+        .update({
+            product_name: formData.product_name,
+            customer_name: formData.customer_name,
+            quantity: Number(formData.quantity),
+            price_per_unit: Number(formData.price_per_unit),
+            delivery_address: formData.delivery_address,
+            status: formData.status,
+        })
+        .eq("id", orderId);
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    revalidatePath("/orders");
+    revalidatePath(`/orders/${orderId}`);
+
+    return { success: true, message: "Order successfully updated!" };
+}

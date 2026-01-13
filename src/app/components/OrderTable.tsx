@@ -2,10 +2,18 @@
 
 import { useState } from 'react';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import { Box, Chip, Typography, Card, CardContent, Stack, useMediaQuery, useTheme, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
-import { DeleteOutline } from '@mui/icons-material';
+import {
+  Box, Chip, Typography, Card, CardContent, Stack, useMediaQuery,
+  useTheme, IconButton, Dialog, DialogTitle, DialogContent,
+  DialogActions, Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider
+} from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { deleteOrderAction } from '@/app/actions/orders';
+import {
+  DeleteOutline, EditOutlined, MoreVert,
+  Launch
+} from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 
 interface Order {
   id: string;
@@ -42,38 +50,46 @@ const getStatusColor = (status: string) => {
 export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const router = useRouter();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
 
-  const handleDeleteClick = (orderId: string) => {
-    setOrderToDelete(orderId);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const openMenu = Boolean(anchorEl);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedOrderId(id);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedOrderId(null);
+  };
+
+  const handleDeleteClick = () => {
+    setOrderToDelete(selectedOrderId);
     setDeleteDialogOpen(true);
+    handleMenuClose();
   };
 
   const handleDeleteConfirm = async () => {
     if (!orderToDelete) return;
-
     try {
       const result = await deleteOrderAction(orderToDelete);
-
       if (result.success) {
         toast.success(result.message || 'Order deleted successfully');
         setDeleteDialogOpen(false);
         setOrderToDelete(null);
-        if (onRefresh) {
-          onRefresh();
-        }
+        if (onRefresh) onRefresh();
       } else {
         toast.error(result.message || 'Failed to delete order');
       }
     } catch {
       toast.error('An unexpected error occurred');
     }
-  };
-
-  const handleDeleteCancel = () => {
-    setDeleteDialogOpen(false);
-    setOrderToDelete(null);
   };
 
   const columns: GridColDef[] = [
@@ -102,7 +118,7 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
     {
       field: 'status',
       headerName: 'Status',
-      width: 100,
+      width: 120,
       resizable: false,
       renderCell: (params) => {
         const style = getStatusColor(params.value);
@@ -149,107 +165,58 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
     },
     {
       field: 'actions',
-      headerName: 'Actions',
-      width: 100,
+      headerName: '',
+      headerAlign: 'center',
+      align: 'center',
+      width: 60,
       sortable: false,
       resizable: false,
       renderCell: (params) => (
-        <Box sx={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          width: '100%',
-          height: '100%'
-        }}>
-          <IconButton
-            color="error"
-            onClick={() => handleDeleteClick(params.row.id)}
-            size="small"
-          >
-            <DeleteOutline fontSize="small" />
-          </IconButton>
-        </Box>
+        <IconButton size="small" onClick={(e) => handleMenuOpen(e, params.row.id)}>
+          <MoreVert fontSize="small" />
+        </IconButton>
       ),
     },
   ];
 
   if (isMobile) {
     return (
-      <>
+      <Box>
         <Stack spacing={2} sx={{ mt: 2 }}>
           {rows.map((order, index) => (
             <Card key={order.id} sx={{ borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: 'none' }}>
               <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    #{index + 1}
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Chip
-                      label={order.status.toUpperCase()}
-                      size="small"
-                      sx={{
-                        fontSize: '0.7rem',
-                        backgroundColor: getStatusColor(order.status).bg,
-                        color: getStatusColor(order.status).text
-                      }}
-                    />
-                    <IconButton
-                      color="error"
-                      onClick={() => handleDeleteClick(order.id)}
-                      size="small"
-                    >
-                      <DeleteOutline fontSize="small" />
-                    </IconButton>
-                  </Box>
+                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>#{index + 1}</Typography>
+                  <IconButton size="small" onClick={(e) => handleMenuOpen(e, order.id)}>
+                    <MoreVert fontSize="small" />
+                  </IconButton>
                 </Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{order.customer_name}</Typography>
-                <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>{order.product_name}</Typography>
-                <Typography variant="caption" color="textSecondary" display="block">{order.delivery_address}</Typography>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, alignItems: 'flex-end' }}>
-                  <Typography variant="body2">{new Date(order.created_at).toLocaleDateString()}</Typography>
+                <Typography variant="body2" color="textSecondary">{order.product_name}</Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, alignItems: 'center' }}>
+                  <Chip
+                    label={order.status.toUpperCase()}
+                    size="small"
+                    sx={{
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      backgroundColor: getStatusColor(order.status).bg, 
+                      color: getStatusColor(order.status).text,       
+                      border: `1px solid ${getStatusColor(order.status).border}`,
+                      borderRadius: '6px'
+                    }}
+                  />
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>${order.total_amount.toFixed(2)}</Typography>
                 </Box>
               </CardContent>
             </Card>
           ))}
         </Stack>
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={handleDeleteCancel}
-          PaperProps={{
-            sx: {
-              borderRadius: '12px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-            }
-          }}
-        >
-          <DialogTitle sx={{ fontWeight: 800, fontSize: '1.25rem' }}>Confirm Delete</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete this order? This action cannot be undone.
-            </Typography>
-          </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 2 }}>
-            <Button
-              onClick={handleDeleteCancel}
-              variant="outlined"
-              sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              color="error"
-              variant="contained"
-              sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 3 }}
-            >
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </>
+
+        <ActionMenu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose} orderId={selectedOrderId} onDelete={handleDeleteClick} router={router} />
+        <DeleteDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} onConfirm={handleDeleteConfirm} />
+      </Box>
     );
   }
 
@@ -264,67 +231,119 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
           rows={rows}
           columns={columns}
           disableRowSelectionOnClick
-          columnHeaderHeight={56}
-          sx={{
-            border: 'none',
-            px: 2,
-            '& .MuiDataGrid-columnHeaderTitle': {
-              fontWeight: 'bold',
-              color: '#666'
-            },
-            '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #f5f5f5',
-            },
-            '& .MuiDataGrid-cell:first-of-type, & .MuiDataGrid-columnHeader:first-of-type': {
-              pl: 3,
-            },
-            '& .MuiDataGrid-cell:last-of-type, & .MuiDataGrid-columnHeader:last-of-type': {
-              pr: 3,
-            },
-            '& .MuiDataGrid-cell:focus': {
-              outline: 'none',
-            },
-          }}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 10 } }
-          }}
+          autoHeight
+          sx={{ border: 'none', px: 2, '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
           pageSizeOptions={[10, 20, 50]}
         />
       </Box>
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        PaperProps={{
+
+      <ActionMenu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose} orderId={selectedOrderId} onDelete={handleDeleteClick} router={router} />
+      <DeleteDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} onConfirm={handleDeleteConfirm} />
+    </>
+  );
+}
+
+function ActionMenu({ anchorEl, open, onClose, orderId, onDelete, router }: any) {
+  return (
+    <Menu
+      anchorEl={anchorEl}
+      open={open}
+      onClose={onClose}
+      elevation={0}
+      slotProps={{
+        paper: {
           sx: {
             borderRadius: '12px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+            minWidth: '180px',
+            mt: 1,
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            '& .MuiMenuItem-root': {
+              px: 2,
+              py: 1.2,
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              gap: 1.5,
+              '&:hover': {
+                backgroundColor: '#f8fafc',
+              },
+            },
           }
-        }}
-      >
-        <DialogTitle sx={{ fontWeight: 800, fontSize: '1.25rem' }}>Confirm Delete</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this order? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button
-            onClick={handleDeleteCancel}
-            variant="outlined"
-            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px' }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            sx={{ textTransform: 'none', fontWeight: 600, borderRadius: '8px', px: 3 }}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        }
+      }}
+      transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+      anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+    >
+      <MenuItem onClick={() => { router.push(`/orders/${orderId}`); onClose(); }}>
+        <Launch sx={{ fontSize: 18, color: '#64748b' }} />
+        <ListItemText primary="View Details" />
+      </MenuItem>
+
+      <MenuItem onClick={() => { router.push(`/orders/${orderId}?edit=true`); onClose(); }}>
+        <EditOutlined sx={{ fontSize: 18, color: '#64748b' }} />
+        <ListItemText primary="Edit Order" />
+      </MenuItem>
+
+      <Divider sx={{ my: 1, borderColor: '#f1f5f9' }} />
+
+      <MenuItem onClick={onDelete} sx={{ color: '#ef4444' }}>
+        <DeleteOutline sx={{ fontSize: 18, color: '#ef4444' }} />
+        <ListItemText primary="Delete Order" />
+      </MenuItem>
+    </Menu>
+  );
+}
+
+function DeleteDialog({ open, onClose, onConfirm }: any) {
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          borderRadius: '16px',
+          padding: 1,
+          maxWidth: '400px'
+        }
+      }}
+    >
+      <DialogTitle sx={{ fontWeight: 700, pt: 3, pb: 1, fontSize: '1.25rem' }}>
+        Delete Order
+      </DialogTitle>
+      <DialogContent>
+        <Typography sx={{ color: '#64748b', lineHeight: 1.6 }}>
+          Are you sure you want to delete this order? This action is permanent and cannot be undone.
+        </Typography>
+      </DialogContent>
+      <DialogActions sx={{ p: 3, gap: 1 }}>
+        <Button
+          onClick={onClose}
+          variant="text"
+          sx={{
+            color: '#64748b',
+            textTransform: 'none',
+            fontWeight: 600
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={onConfirm}
+          variant="contained"
+          disableElevation
+          sx={{
+            backgroundColor: '#ef4444', 
+            '&:hover': { backgroundColor: '#dc2626' },
+            borderRadius: '8px',
+            textTransform: 'none',
+            fontWeight: 600,
+            px: 3
+          }}
+        >
+          Delete Order
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

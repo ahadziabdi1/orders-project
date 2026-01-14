@@ -1,4 +1,3 @@
-// Dodaj ovo u app/page.tsx da testiraš konekciju
 import { supabase } from '@/lib/supabaseClient';
 
 export default async function TestPage() {

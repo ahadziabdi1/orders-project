@@ -5,7 +5,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
   Box, Chip, Typography, Card, CardContent, Stack, useMediaQuery,
   useTheme, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, Button, Menu, MenuItem, ListItemIcon, ListItemText, Divider
+  DialogActions, Button, Menu, MenuItem, ListItemText, Divider
 } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { deleteOrderAction } from '@/app/actions/orders';
@@ -94,11 +94,17 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
 
   const columns: GridColDef[] = [
     {
-      field: 'displayId',
+      field: 'id',
       headerName: 'Order ID',
       width: 120,
       resizable: false,
-      renderCell: (params) => <strong>#{params.api.getAllRowIds().indexOf(params.id) + 1}</strong>
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <Typography sx={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>
+            #{params.value.toString().substring(0, 7).toUpperCase()}
+          </Typography>
+        </Box>
+      )
     },
     {
       field: 'product_name',
@@ -118,7 +124,7 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
     {
       field: 'status',
       headerName: 'Status',
-      width: 120,
+      width: 130,
       resizable: false,
       renderCell: (params) => {
         const style = getStatusColor(params.value);
@@ -127,8 +133,8 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
             label={params.value?.toUpperCase()}
             size="small"
             sx={{
-              fontWeight: 600,
-              fontSize: '0.7rem',
+              fontWeight: 700,
+              fontSize: '0.65rem',
               width: '100%',
               backgroundColor: style.bg,
               color: style.text,
@@ -153,7 +159,7 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
     {
       field: 'total_amount',
       headerName: 'Amount',
-      width: 100,
+      width: 110,
       align: 'right',
       renderCell: (params) => (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '100%', width: '100%' }}>
@@ -168,7 +174,7 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
       headerName: '',
       headerAlign: 'center',
       align: 'center',
-      width: 60,
+      width: 50,
       sortable: false,
       resizable: false,
       renderCell: (params) => (
@@ -183,31 +189,42 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
     return (
       <Box>
         <Stack spacing={2} sx={{ mt: 2 }}>
-          {rows.map((order, index) => (
-            <Card key={order.id} sx={{ borderRadius: '12px', border: '1px solid #e0e0e0', boxShadow: 'none' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 'bold' }}>#{index + 1}</Typography>
+          {rows.map((order) => (
+            <Card key={order.id} sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                  <Box>
+                    <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
+                      #{order.id.toString().substring(0, 7).toUpperCase()}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(order.created_at))}
+                    </Typography>
+                  </Box>
                   <IconButton size="small" onClick={(e) => handleMenuOpen(e, order.id)}>
                     <MoreVert fontSize="small" />
                   </IconButton>
                 </Box>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{order.customer_name}</Typography>
-                <Typography variant="body2" color="textSecondary">{order.product_name}</Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, alignItems: 'center' }}>
+
+                <Typography sx={{ fontWeight: 700, color: '#334155' }}>{order.customer_name}</Typography>
+                <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>{order.product_name}</Typography>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Chip
                     label={order.status.toUpperCase()}
                     size="small"
                     sx={{
                       fontSize: '0.65rem',
-                      fontWeight: 600,
-                      backgroundColor: getStatusColor(order.status).bg, 
-                      color: getStatusColor(order.status).text,       
+                      fontWeight: 700,
+                      backgroundColor: getStatusColor(order.status).bg,
+                      color: getStatusColor(order.status).text,
                       border: `1px solid ${getStatusColor(order.status).border}`,
                       borderRadius: '6px'
                     }}
                   />
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>${order.total_amount.toFixed(2)}</Typography>
+                  <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>
+                    ${order.total_amount?.toFixed(2)}
+                  </Typography>
                 </Box>
               </CardContent>
             </Card>
@@ -222,17 +239,29 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
 
   return (
     <>
-      <Box sx={{ width: '100%', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e0e0e0', mt: 3, overflow: 'hidden' }}>
-        <Box sx={{ p: 2.5, borderBottom: '1px solid #f0f0f0' }}>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>All Orders</Typography>
-          <Typography variant="body2" color="textSecondary">{rows.length} orders total</Typography>
+      <Box sx={{ width: '100%', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', mt: 3, overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+        <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9' }}>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0f172a' }}>All Orders</Typography>
+          <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>{rows.length} total transactions found</Typography>
         </Box>
         <DataGrid
           rows={rows}
           columns={columns}
           disableRowSelectionOnClick
           autoHeight
-          sx={{ border: 'none', px: 2, '& .MuiDataGrid-cell:focus': { outline: 'none' } }}
+          sx={{
+            border: 'none',
+            px: 2,
+            '& .MuiDataGrid-columnHeaders': {
+              color: '#64748b',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              fontSize: '0.75rem',
+              letterSpacing: '0.5px'
+            },
+            '& .MuiDataGrid-cell:focus': { outline: 'none' },
+            '& .MuiDataGrid-row:hover': { backgroundColor: '#f8fafc' }
+          }}
           initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
           pageSizeOptions={[10, 20, 50]}
         />
@@ -251,14 +280,15 @@ function ActionMenu({ anchorEl, open, onClose, orderId, onDelete, router }: any)
       open={open}
       onClose={onClose}
       elevation={0}
+      disableAutoFocusItem
       slotProps={{
         paper: {
           sx: {
             borderRadius: '12px',
             minWidth: '180px',
             mt: 1,
-            border: '1px solid #e5e7eb',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
             '& .MuiMenuItem-root': {
               px: 2,
               py: 1.2,
@@ -266,7 +296,11 @@ function ActionMenu({ anchorEl, open, onClose, orderId, onDelete, router }: any)
               fontWeight: 500,
               gap: 1.5,
               '&:hover': {
-                backgroundColor: '#f8fafc',
+                backgroundColor: 'transparent',
+                color: '#0f172a',
+              },
+              '&.Mui-focusVisible': {
+                backgroundColor: 'transparent',
               },
             },
           }
@@ -275,19 +309,32 @@ function ActionMenu({ anchorEl, open, onClose, orderId, onDelete, router }: any)
       transformOrigin={{ horizontal: 'right', vertical: 'top' }}
       anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
     >
-      <MenuItem onClick={() => { router.push(`/orders/${orderId}`); onClose(); }}>
+      <MenuItem
+        disableRipple
+        onClick={() => { router.push(`/orders/${orderId}`); onClose(); }}
+      >
         <Launch sx={{ fontSize: 18, color: '#64748b' }} />
         <ListItemText primary="View Details" />
       </MenuItem>
 
-      <MenuItem onClick={() => { router.push(`/orders/${orderId}?edit=true`); onClose(); }}>
+      <MenuItem
+        disableRipple
+        onClick={() => { router.push(`/orders/${orderId}?edit=true`); onClose(); }}
+      >
         <EditOutlined sx={{ fontSize: 18, color: '#64748b' }} />
         <ListItemText primary="Edit Order" />
       </MenuItem>
 
       <Divider sx={{ my: 1, borderColor: '#f1f5f9' }} />
 
-      <MenuItem onClick={onDelete} sx={{ color: '#ef4444' }}>
+      <MenuItem
+        disableRipple
+        onClick={onDelete}
+        sx={{
+          color: '#ef4444',
+          '&:hover': { color: '#dc2626', backgroundColor: 'transparent' }
+        }}
+      >
         <DeleteOutline sx={{ fontSize: 18, color: '#ef4444' }} />
         <ListItemText primary="Delete Order" />
       </MenuItem>
@@ -297,52 +344,14 @@ function ActionMenu({ anchorEl, open, onClose, orderId, onDelete, router }: any)
 
 function DeleteDialog({ open, onClose, onConfirm }: any) {
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: {
-          borderRadius: '16px',
-          padding: 1,
-          maxWidth: '400px'
-        }
-      }}
-    >
-      <DialogTitle sx={{ fontWeight: 700, pt: 3, pb: 1, fontSize: '1.25rem' }}>
-        Delete Order
-      </DialogTitle>
+    <Dialog open={open} onClose={onClose} PaperProps={{ sx: { borderRadius: '16px', p: 1, maxWidth: '400px' } }}>
+      <DialogTitle sx={{ fontWeight: 800, pt: 3, pb: 1 }}>Delete Order</DialogTitle>
       <DialogContent>
-        <Typography sx={{ color: '#64748b', lineHeight: 1.6 }}>
-          Are you sure you want to delete this order? This action is permanent and cannot be undone.
-        </Typography>
+        <Typography sx={{ color: '#64748b' }}>Are you sure? This action is permanent and cannot be undone.</Typography>
       </DialogContent>
       <DialogActions sx={{ p: 3, gap: 1 }}>
-        <Button
-          onClick={onClose}
-          variant="text"
-          sx={{
-            color: '#64748b',
-            textTransform: 'none',
-            fontWeight: 600
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={onConfirm}
-          variant="contained"
-          disableElevation
-          sx={{
-            backgroundColor: '#ef4444', 
-            '&:hover': { backgroundColor: '#dc2626' },
-            borderRadius: '8px',
-            textTransform: 'none',
-            fontWeight: 600,
-            px: 3
-          }}
-        >
-          Delete Order
-        </Button>
+        <Button onClick={onClose} sx={{ color: '#64748b', textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
+        <Button onClick={onConfirm} variant="contained" sx={{ backgroundColor: '#ef4444', borderRadius: '8px', textTransform: 'none', fontWeight: 600, px: 3, '&:hover': { backgroundColor: '#dc2626' } }}>Delete Order</Button>
       </DialogActions>
     </Dialog>
   );

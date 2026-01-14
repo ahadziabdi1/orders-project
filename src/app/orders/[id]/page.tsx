@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { supabase } from '@/lib/supabaseClient';
 import {
     Container, Paper, Typography, Button, Box, TextField,
@@ -60,12 +60,13 @@ export default function OrderDetailsPage() {
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
 
-    const { 
-        register, 
-        handleSubmit, 
+    const {
+        register,
+        handleSubmit,
         formState: { errors },
         reset,
-        setValue
+        setValue,
+        control
     } = useForm<OrderFormData>({
         defaultValues: {
             customer_name: '',
@@ -93,19 +94,29 @@ export default function OrderDetailsPage() {
             }
             setLoading(false);
         };
-        
+
         if (id) {
             fetchOrder();
         }
-    }, [id, setValue]);
+    }, [id, setValue, isEditMode]);
 
     const handleUpdate = async (data: OrderFormData) => {
         setIsUpdating(true);
-        
+
         try {
             const result = await updateOrderAction(id as string, data);
             if (result.success) {
                 toast.success(result.message);
+
+                setOrder(prev => ({
+                    ...prev,
+                    ...data,
+                    id: prev.id,
+                    created_at: prev.created_at
+                }));
+
+                router.refresh();
+
                 router.push(`/orders/${id}`);
             } else {
                 toast.error(result.message || "Update failed");
@@ -209,7 +220,7 @@ export default function OrderDetailsPage() {
                                     fullWidth
                                     disabled={isUpdating}
                                     placeholder="Enter customer name"
-                                    {...register("customer_name", { 
+                                    {...register("customer_name", {
                                         required: "Customer name is required",
                                         minLength: {
                                             value: 2,
@@ -227,7 +238,7 @@ export default function OrderDetailsPage() {
                                     fullWidth
                                     disabled={isUpdating}
                                     placeholder="Enter product name"
-                                    {...register("product_name", { 
+                                    {...register("product_name", {
                                         required: "Product name is required"
                                     })}
                                     error={!!errors.product_name}
@@ -242,7 +253,7 @@ export default function OrderDetailsPage() {
                                     type="number"
                                     disabled={isUpdating}
                                     inputProps={{ min: 1 }}
-                                    {...register("quantity", { 
+                                    {...register("quantity", {
                                         required: "Quantity is required",
                                         min: {
                                             value: 1,
@@ -262,7 +273,7 @@ export default function OrderDetailsPage() {
                                     type="number"
                                     disabled={isUpdating}
                                     inputProps={{ step: "0.01", min: 0 }}
-                                    {...register("price_per_unit", { 
+                                    {...register("price_per_unit", {
                                         required: "Price is required",
                                         min: {
                                             value: 0,
@@ -283,7 +294,7 @@ export default function OrderDetailsPage() {
                                 rows={3}
                                 disabled={isUpdating}
                                 placeholder="Enter full delivery address"
-                                {...register("delivery_address", { 
+                                {...register("delivery_address", {
                                     required: "Delivery address is required",
                                     minLength: {
                                         value: 5,
@@ -297,18 +308,24 @@ export default function OrderDetailsPage() {
                         </Box>
                         <Box>
                             <LabelWithIcon icon={LocalOfferOutlined} label="Status" />
-                            <TextField 
-                                select 
-                                fullWidth 
-                                defaultValue={order.status}
-                                disabled={isUpdating}
-                                {...register("status")}
-                                sx={{ mt: 1 }}
-                            >
-                                {['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'].map((s) => (
-                                    <MenuItem key={s} value={s}>{s}</MenuItem>
-                                ))}
-                            </TextField>
+                            <Controller
+                                name="status"
+                                control={control}
+                                render={({ field }) => (
+                                    <TextField
+                                        select
+                                        fullWidth
+                                        disabled={isUpdating}
+                                        value={field.value || 'CREATED'}
+                                        onChange={field.onChange}
+                                        sx={{ mt: 1 }}
+                                    >
+                                        {['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'].map((s) => (
+                                            <MenuItem key={s} value={s}>{s}</MenuItem>
+                                        ))}
+                                    </TextField>
+                                )}
+                            />
                         </Box>
                         <Box sx={{ display: 'flex', flexDirection: { xs: 'column-reverse', sm: 'row' }, justifyContent: 'flex-end', gap: 1.5, mt: 3 }}>
                             <Button

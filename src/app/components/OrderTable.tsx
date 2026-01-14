@@ -5,13 +5,14 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import {
   Box, Chip, Typography, Card, CardContent, Stack, useMediaQuery,
   useTheme, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, Button, Menu, MenuItem, ListItemText, Divider
+  DialogActions, Button, Menu, MenuItem, ListItemText, Divider,
+  TextField, FormControl, InputLabel, Select, InputAdornment
 } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { deleteOrderAction } from '@/app/actions/orders';
 import {
   DeleteOutline, EditOutlined, MoreVert,
-  Launch
+  Launch, SearchOutlined
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 
@@ -23,10 +24,15 @@ interface Order {
   status: string;
   created_at: string;
   total_amount: number;
+  quantity: number;
+  price_per_unit: number;
 }
 
 interface OrdersTableProps {
   rows: Order[];
+  searchTerm: string;
+  statusFilter: string;
+  onFilterChange: (search: string, status: string) => void;
   onRefresh?: () => void;
 }
 
@@ -47,7 +53,13 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
+export default function OrdersTable({
+  rows,
+  searchTerm,
+  statusFilter,
+  onFilterChange,
+  onRefresh
+}: OrdersTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const router = useRouter();
@@ -58,6 +70,8 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const openMenu = Boolean(anchorEl);
+
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
     setAnchorEl(event.currentTarget);
@@ -90,6 +104,21 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
     } catch {
       toast.error('An unexpected error occurred');
     }
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearch = e.target.value;
+    setLocalSearchTerm(newSearch);
+    onFilterChange(newSearch, statusFilter);
+  };
+
+  const handleStatusFilterChange = (newStatus: string) => {
+    onFilterChange(localSearchTerm, newStatus);
+  };
+
+  const handleResetFilters = () => {
+    setLocalSearchTerm('');
+    onFilterChange('', 'ALL');
   };
 
   const columns: GridColDef[] = [
@@ -187,48 +216,116 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
 
   if (isMobile) {
     return (
-      <Box>
-        <Stack spacing={2} sx={{ mt: 2 }}>
-          {rows.map((order) => (
-            <Card key={order.id} sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
-              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
-                  <Box>
-                    <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
-                      #{order.id.toString().substring(0, 7).toUpperCase()}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary">
-                      {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(order.created_at))}
-                    </Typography>
-                  </Box>
-                  <IconButton size="small" onClick={(e) => handleMenuOpen(e, order.id)}>
-                    <MoreVert fontSize="small" />
-                  </IconButton>
-                </Box>
+      <Box sx={{ mt: 3 }}>
+        <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', mb: 3, boxShadow: 'none' }}>
+          <CardContent sx={{ p: 2 }}>
+            <Stack spacing={2}>
+              <TextField
+                placeholder="Search orders..."
+                size="small"
+                fullWidth
+                value={localSearchTerm}
+                onChange={handleSearchInputChange}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><SearchOutlined sx={{ color: '#64748b', fontSize: 20 }} /></InputAdornment>,
+                }}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+              />
 
-                <Typography sx={{ fontWeight: 700, color: '#334155' }}>{order.customer_name}</Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>{order.product_name}</Typography>
+              <FormControl size="small" fullWidth>
+                <InputLabel id="status-filter-label">Status</InputLabel>
+                <Select
+                  labelId="status-filter-label"
+                  value={statusFilter}
+                  label="Status"
+                  onChange={(e) => handleStatusFilterChange(e.target.value)}
+                  sx={{ borderRadius: '8px' }}
+                >
+                  <MenuItem value="ALL">All Statuses</MenuItem>
+                  <MenuItem value="CREATED">Created</MenuItem>
+                  <MenuItem value="PROCESSING">Processing</MenuItem>
+                  <MenuItem value="SHIPPED">Shipped</MenuItem>
+                  <MenuItem value="DELIVERED">Delivered</MenuItem>
+                  <MenuItem value="CANCELED">Canceled</MenuItem>
+                </Select>
+              </FormControl>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Chip
-                    label={order.status.toUpperCase()}
-                    size="small"
-                    sx={{
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      backgroundColor: getStatusColor(order.status).bg,
-                      color: getStatusColor(order.status).text,
-                      border: `1px solid ${getStatusColor(order.status).border}`,
-                      borderRadius: '6px'
-                    }}
-                  />
-                  <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>
-                    ${order.total_amount?.toFixed(2)}
-                  </Typography>
-                </Box>
+              <Button
+                variant="outlined"
+                onClick={handleResetFilters}
+                sx={{
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  borderColor: '#e2e8f0',
+                  '&:hover': {
+                    backgroundColor: '#f8fafc',
+                    borderColor: '#cbd5e1'
+                  }
+                }}
+              >
+                Reset Filters
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Stack spacing={2}>
+          {rows.length === 0 ? (
+            <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+              <CardContent sx={{ p: 3, textAlign: 'center' }}>
+                <Typography color="textSecondary">
+                  {searchTerm || statusFilter !== 'ALL' ? 'No orders match your filters' : 'No orders found'}
+                </Typography>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            rows.map((order) => {
+              const totalAmount = order.total_amount || (order.quantity * order.price_per_unit);
+
+              return (
+                <Card key={order.id} sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                      <Box>
+                        <Typography sx={{ fontWeight: 800, color: '#0f172a', fontSize: '0.85rem' }}>
+                          #{order.id.toString().substring(0, 7).toUpperCase()}
+                        </Typography>
+                        <Typography variant="caption" color="textSecondary">
+                          {new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(order.created_at))}
+                        </Typography>
+                      </Box>
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, order.id)}>
+                        <MoreVert fontSize="small" />
+                      </IconButton>
+                    </Box>
+
+                    <Typography sx={{ fontWeight: 700, color: '#334155' }}>{order.customer_name}</Typography>
+                    <Typography variant="body2" sx={{ color: '#64748b', mb: 2 }}>{order.product_name}</Typography>
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Chip
+                        label={order.status.toUpperCase()}
+                        size="small"
+                        sx={{
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          backgroundColor: getStatusColor(order.status).bg,
+                          color: getStatusColor(order.status).text,
+                          border: `1px solid ${getStatusColor(order.status).border}`,
+                          borderRadius: '6px'
+                        }}
+                      />
+                      <Typography sx={{ fontWeight: 800, color: '#0f172a' }}>
+                        ${totalAmount?.toFixed(2)}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </Stack>
 
         <ActionMenu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose} orderId={selectedOrderId} onDelete={handleDeleteClick} router={router} />
@@ -238,38 +335,139 @@ export default function OrdersTable({ rows, onRefresh }: OrdersTableProps) {
   }
 
   return (
-    <>
-      <Box sx={{ width: '100%', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', mt: 3, overflow: 'hidden', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)' }}>
+    <Box sx={{ mt: 3 }}>
+      <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', mb: 3, boxShadow: 'none' }}>
+        <CardContent sx={{ p: 3 }}>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <TextField
+              placeholder="Search by customer name"
+              size="small"
+              fullWidth
+              value={localSearchTerm}
+              onChange={handleSearchInputChange}
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><SearchOutlined sx={{ color: '#64748b', fontSize: 20 }} /></InputAdornment>,
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '8px',
+                  backgroundColor: '#f8fafc'
+                }
+              }}
+            />
+
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel id="status-filter-label">Status</InputLabel>
+              <Select
+                labelId="status-filter-label"
+                value={statusFilter}
+                label="Status"
+                onChange={(e) => handleStatusFilterChange(e.target.value)}
+                sx={{
+                  borderRadius: '8px',
+                  backgroundColor: '#f8fafc',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#e2e8f0'
+                  }
+                }}
+              >
+                <MenuItem value="ALL">All Statuses</MenuItem>
+                <MenuItem value="CREATED">Created</MenuItem>
+                <MenuItem value="PROCESSING">Processing</MenuItem>
+                <MenuItem value="SHIPPED">Shipped</MenuItem>
+                <MenuItem value="DELIVERED">Delivered</MenuItem>
+                <MenuItem value="CANCELED">Canceled</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button
+              variant="outlined"
+              onClick={handleResetFilters}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                color: '#64748b',
+                borderColor: '#e2e8f0',
+                px: 3,
+                height: '40px',
+                '&:hover': {
+                  backgroundColor: '#f8fafc',
+                  borderColor: '#cbd5e1'
+                }
+              }}
+            >
+              Reset
+            </Button>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      {/* DataGrid for Desktop */}
+      <Box sx={{
+        width: '100%',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        overflow: 'hidden',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+      }}>
         <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9' }}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0f172a' }}>All Orders</Typography>
-          <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>{rows.length} total transactions found</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 800, color: '#0f172a' }}>
+            All Orders
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
+            {rows.length} {rows.length === 1 ? 'order' : 'orders'} found
+            {(searchTerm || statusFilter !== 'ALL') && ' (filtered)'}
+          </Typography>
         </Box>
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          disableRowSelectionOnClick
-          autoHeight
-          sx={{
-            border: 'none',
-            px: 2,
-            '& .MuiDataGrid-columnHeaders': {
-              color: '#64748b',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              fontSize: '0.75rem',
-              letterSpacing: '0.5px'
-            },
-            '& .MuiDataGrid-cell:focus': { outline: 'none' },
-            '& .MuiDataGrid-row:hover': { backgroundColor: '#f8fafc' }
-          }}
-          initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-          pageSizeOptions={[10, 20, 50]}
-        />
+
+        {rows.length === 0 ? (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color="textSecondary">
+              {searchTerm || statusFilter !== 'ALL' ? 'No orders match your filters' : 'No orders found'}
+            </Typography>
+          </Box>
+        ) : (
+          <DataGrid
+            rows={rows.map(order => ({
+              ...order,
+              total_amount: order.total_amount || (order.quantity * order.price_per_unit)
+            }))}
+            columns={columns}
+            disableRowSelectionOnClick
+            autoHeight
+            sx={{
+              border: 'none',
+              px: 2,
+              '& .MuiDataGrid-columnHeaders': {
+                color: '#64748b',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                fontSize: '0.75rem',
+                letterSpacing: '0.5px',
+                borderBottom: '1px solid #f1f5f9'
+              },
+              '& .MuiDataGrid-cell': {
+                borderBottom: '1px solid #f1f5f9'
+              },
+              '& .MuiDataGrid-cell:focus': { outline: 'none' },
+              '& .MuiDataGrid-row:hover': {
+                backgroundColor: '#f8fafc',
+                '& .MuiDataGrid-cell': {
+                  borderBottomColor: '#e2e8f0'
+                }
+              }
+            }}
+            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+            pageSizeOptions={[10, 20, 50]}
+          />
+        )}
       </Box>
 
       <ActionMenu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose} orderId={selectedOrderId} onDelete={handleDeleteClick} router={router} />
       <DeleteDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} onConfirm={handleDeleteConfirm} />
-    </>
+    </Box>
   );
 }
 

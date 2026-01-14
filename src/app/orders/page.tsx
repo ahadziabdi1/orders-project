@@ -11,11 +11,24 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const fetchOrders = useCallback(async () => {
-        const { data, error } = await supabase
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('ALL');
+
+    const fetchOrders = useCallback(async (search?: string, status?: string) => {
+        let query = supabase
             .from('orders')
             .select('*')
             .order('created_at', { ascending: false });
+
+        if (search) {
+            query = query.ilike('customer_name', `%${search}%`);
+        }
+
+        if (status && status !== 'ALL') {
+            query = query.eq('status', status);
+        }
+
+        const { data, error } = await query;
 
         if (!error && data) {
             const formatted = data.map(o => ({
@@ -27,29 +40,14 @@ export default function OrdersPage() {
     }, []);
 
     useEffect(() => {
-        let isMounted = true;
-
-        const loadOrders = async () => {
-            const { data, error } = await supabase
-                .from('orders')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (!error && data && isMounted) {
-                const formatted = data.map(o => ({
-                    ...o,
-                    total_amount: o.quantity * o.price_per_unit
-                }));
-                setOrders(formatted);
-            }
-        };
-
-        loadOrders();
-
-        return () => {
-            isMounted = false;
-        };
+        fetchOrders();
     }, []);
+
+    const handleFilterChange = (search: string, status: string) => {
+        setSearchTerm(search);
+        setStatusFilter(status);
+        fetchOrders(search, status);
+    };
 
     return (
         <Box sx={{ minHeight: '100vh', py: { xs: 3, md: 6 }, backgroundColor: '#fdfdfd' }}>
@@ -95,7 +93,13 @@ export default function OrdersPage() {
                     </Button>
                 </Box>
 
-                <OrdersTable rows={orders} onRefresh={fetchOrders} />
+                <OrdersTable
+                    rows={orders}
+                    searchTerm={searchTerm}
+                    statusFilter={statusFilter}
+                    onFilterChange={handleFilterChange}
+                    onRefresh={() => fetchOrders(searchTerm, statusFilter)}
+                />
 
                 <Dialog
                     open={isModalOpen}
@@ -120,7 +124,7 @@ export default function OrdersPage() {
                     <DialogContent sx={{ pt: 0 }}>
                         <OrderForm onClose={() => {
                             setIsModalOpen(false);
-                            fetchOrders();
+                            fetchOrders(searchTerm, statusFilter);
                         }} />
                     </DialogContent>
                 </Dialog>

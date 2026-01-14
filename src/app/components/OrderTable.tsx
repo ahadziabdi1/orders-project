@@ -217,8 +217,32 @@ export default function OrdersTable({
   if (isMobile) {
     return (
       <Box sx={{ mt: 3 }}>
-        <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', mb: 3, boxShadow: 'none' }}>
-          <CardContent sx={{ p: 2 }}>
+        {/* Zaglavlje za mobile */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{
+            fontWeight: 800,
+            color: '#0f172a',
+            mb: 1
+          }}>
+            Orders
+          </Typography>
+          <Typography variant="body2" sx={{
+            color: '#64748b',
+            fontWeight: 500
+          }}>
+            Manage and filter your orders
+          </Typography>
+        </Box>
+
+        {/* Filter Box za mobile */}
+        <Card sx={{
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          mb: 4,
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+          backgroundColor: 'white'
+        }}>
+          <CardContent sx={{ p: 3 }}>
             <Stack spacing={2}>
               <TextField
                 placeholder="Search orders..."
@@ -227,9 +251,16 @@ export default function OrdersTable({
                 value={localSearchTerm}
                 onChange={handleSearchInputChange}
                 InputProps={{
-                  startAdornment: <InputAdornment position="start"><SearchOutlined sx={{ color: '#64748b', fontSize: 20 }} /></InputAdornment>,
+                  startAdornment: <InputAdornment position="start">
+                    <SearchOutlined sx={{ color: '#64748b', fontSize: 20 }} />
+                  </InputAdornment>,
                 }}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                    backgroundColor: '#f8fafc'
+                  }
+                }}
               />
 
               <FormControl size="small" fullWidth>
@@ -239,7 +270,10 @@ export default function OrdersTable({
                   value={statusFilter}
                   label="Status"
                   onChange={(e) => handleStatusFilterChange(e.target.value)}
-                  sx={{ borderRadius: '8px' }}
+                  sx={{
+                    borderRadius: '8px',
+                    backgroundColor: '#f8fafc'
+                  }}
                 >
                   <MenuItem value="ALL">All Statuses</MenuItem>
                   <MenuItem value="CREATED">Created</MenuItem>
@@ -253,6 +287,7 @@ export default function OrdersTable({
               <Button
                 variant="outlined"
                 onClick={handleResetFilters}
+                fullWidth
                 sx={{
                   borderRadius: '8px',
                   textTransform: 'none',
@@ -271,9 +306,15 @@ export default function OrdersTable({
           </CardContent>
         </Card>
 
+        {/* Mobile order cards */}
         <Stack spacing={2}>
           {rows.length === 0 ? (
-            <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+            <Card sx={{
+              borderRadius: '12px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+              backgroundColor: 'white'
+            }}>
               <CardContent sx={{ p: 3, textAlign: 'center' }}>
                 <Typography color="textSecondary">
                   {searchTerm || statusFilter !== 'ALL' ? 'No orders match your filters' : 'No orders found'}
@@ -285,7 +326,12 @@ export default function OrdersTable({
               const totalAmount = order.total_amount || (order.quantity * order.price_per_unit);
 
               return (
-                <Card key={order.id} sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                <Card key={order.id} sx={{
+                  borderRadius: '12px',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                  backgroundColor: 'white'
+                }}>
                   <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
                       <Box>
@@ -336,7 +382,14 @@ export default function OrdersTable({
 
   return (
     <Box sx={{ mt: 3 }}>
-      <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', mb: 3, boxShadow: 'none' }}>
+      <Card sx={{
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        mb: 4,
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        backgroundColor: 'white',
+        overflow: 'hidden'
+      }}>
         <CardContent sx={{ p: 3 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <TextField
@@ -346,18 +399,35 @@ export default function OrdersTable({
               value={localSearchTerm}
               onChange={handleSearchInputChange}
               InputProps={{
-                startAdornment: <InputAdornment position="start"><SearchOutlined sx={{ color: '#64748b', fontSize: 20 }} /></InputAdornment>,
+                startAdornment: <InputAdornment position="start">
+                  <SearchOutlined sx={{ color: '#64748b', fontSize: 20 }} />
+                </InputAdornment>,
               }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '8px',
-                  backgroundColor: '#f8fafc'
+                  backgroundColor: '#f8fafc',
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#cbd5e1'
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#94a3b8',
+                    borderWidth: '1px'
+                  }
                 }
               }}
             />
 
             <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel id="status-filter-label">Status</InputLabel>
+              <InputLabel
+                id="status-filter-label"
+                sx={{
+                  fontSize: '0.875rem',
+                  color: '#64748b'
+                }}
+              >
+                Status
+              </InputLabel>
               <Select
                 labelId="status-filter-label"
                 value={statusFilter}
@@ -366,17 +436,25 @@ export default function OrdersTable({
                 sx={{
                   borderRadius: '8px',
                   backgroundColor: '#f8fafc',
+                  fontSize: '0.875rem',
                   '& .MuiOutlinedInput-notchedOutline': {
                     borderColor: '#e2e8f0'
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#cbd5e1'
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#94a3b8',
+                    borderWidth: '1px'
                   }
                 }}
               >
-                <MenuItem value="ALL">All Statuses</MenuItem>
-                <MenuItem value="CREATED">Created</MenuItem>
-                <MenuItem value="PROCESSING">Processing</MenuItem>
-                <MenuItem value="SHIPPED">Shipped</MenuItem>
-                <MenuItem value="DELIVERED">Delivered</MenuItem>
-                <MenuItem value="CANCELED">Canceled</MenuItem>
+                <MenuItem value="ALL" sx={{ fontSize: '0.875rem' }}>All Statuses</MenuItem>
+                <MenuItem value="CREATED" sx={{ fontSize: '0.875rem' }}>Created</MenuItem>
+                <MenuItem value="PROCESSING" sx={{ fontSize: '0.875rem' }}>Processing</MenuItem>
+                <MenuItem value="SHIPPED" sx={{ fontSize: '0.875rem' }}>Shipped</MenuItem>
+                <MenuItem value="DELIVERED" sx={{ fontSize: '0.875rem' }}>Delivered</MenuItem>
+                <MenuItem value="CANCELED" sx={{ fontSize: '0.875rem' }}>Canceled</MenuItem>
               </Select>
             </FormControl>
 
@@ -387,13 +465,15 @@ export default function OrdersTable({
                 borderRadius: '8px',
                 textTransform: 'none',
                 fontWeight: 600,
+                fontSize: '0.875rem',
                 color: '#64748b',
                 borderColor: '#e2e8f0',
                 px: 3,
                 height: '40px',
                 '&:hover': {
                   backgroundColor: '#f8fafc',
-                  borderColor: '#cbd5e1'
+                  borderColor: '#cbd5e1',
+                  color: '#475569'
                 }
               }}
             >
@@ -403,7 +483,7 @@ export default function OrdersTable({
         </CardContent>
       </Card>
 
-      {/* DataGrid for Desktop */}
+      {/* DataGrid za Desktop */}
       <Box sx={{
         width: '100%',
         backgroundColor: 'white',

@@ -35,7 +35,19 @@ export const TableFilters = ({ searchTerm, statusFilter, onSearchChange, onStatu
                         <MenuItem value="CANCELED">Canceled</MenuItem>
                     </Select>
                 </FormControl>
-                <Button variant="outlined" onClick={onReset} sx={{ borderRadius: '8px', textTransform: 'none', height: '40px' }}>
+                <Button variant="outlined" onClick={onReset} sx={{
+                    borderRadius: '8px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    color: '#64748b',
+                    borderColor: '#e2e8f0',
+                    '&:hover': {
+                        backgroundColor: '#f8fafc',
+                        borderColor: '#cbd5e1'
+                    },
+                    maxWidth: { md: 80 },
+                    width: '100%'
+                }}>
                     Reset
                 </Button>
             </Stack>

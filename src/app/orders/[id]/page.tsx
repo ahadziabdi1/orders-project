@@ -14,6 +14,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import { updateOrderAction } from '@/app/actions/orders';
+import { Order, getStatusColor } from '../../components/orders-table/types';
 
 type OrderFormData = {
     product_name: string;
@@ -22,23 +23,6 @@ type OrderFormData = {
     price_per_unit: number;
     delivery_address: string;
     status: string;
-};
-
-const getStatusColor = (status: string) => {
-    switch (status?.toUpperCase()) {
-        case 'CREATED':
-            return { bg: 'rgba(59, 130, 246, 0.1)', text: '#2563eb', border: 'rgba(59, 130, 246, 0.2)' };
-        case 'PROCESSING':
-            return { bg: 'rgba(245, 158, 11, 0.1)', text: '#d97706', border: 'rgba(245, 158, 11, 0.2)' };
-        case 'SHIPPED':
-            return { bg: 'rgba(139, 92, 246, 0.1)', text: '#7c3aed', border: 'rgba(139, 92, 246, 0.2)' };
-        case 'DELIVERED':
-            return { bg: 'rgba(34, 197, 94, 0.1)', text: '#16a34a', border: 'rgba(34, 197, 94, 0.2)' };
-        case 'CANCELED':
-            return { bg: 'rgba(239, 68, 68, 0.1)', text: '#dc2626', border: 'rgba(239, 68, 68, 0.2)' };
-        default:
-            return { bg: '#f9fafb', text: '#4b5563', border: '#e5e7eb' };
-    }
 };
 
 const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType<{ sx?: SxProps<Theme> }>, label: string }) => (
@@ -56,7 +40,7 @@ export default function OrderDetailsPage() {
     const router = useRouter();
     const isEditMode = searchParams.get('edit') === 'true';
 
-    const [order, setOrder] = useState<any>(null);
+    const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -102,21 +86,22 @@ export default function OrderDetailsPage() {
 
     const handleUpdate = async (data: OrderFormData) => {
         setIsUpdating(true);
-
         try {
             const result = await updateOrderAction(id as string, data);
             if (result.success) {
                 toast.success(result.message);
 
-                setOrder(prev => ({
-                    ...prev,
-                    ...data,
-                    id: prev.id,
-                    created_at: prev.created_at
-                }));
+                setOrder(prev => {
+                    if (!prev) return null;
+
+                    return {
+                        ...prev,
+                        ...data,
+                        total_amount: data.quantity * data.price_per_unit
+                    };
+                });
 
                 router.refresh();
-
                 router.push(`/orders/${id}`);
             } else {
                 toast.error(result.message || "Update failed");

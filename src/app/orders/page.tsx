@@ -11,14 +11,25 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    const [page, setPage] = useState(0);
+    const [pageSize, setPageSize] = useState(10);
+    const [rowCount, setRowCount] = useState(0);
+    const [loading, setLoading] = useState(false);
+
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
 
-    const fetchOrders = useCallback(async (search?: string, status?: string) => {
+    const fetchOrders = useCallback(async (search?: string, status?: string, currentPage = 0, currentSize = 10) => {
+        setLoading(true);
+
+        const from = currentPage * currentSize;
+        const to = from + currentSize - 1;
+
         let query = supabase
             .from('orders')
-            .select('*')
-            .order('created_at', { ascending: false });
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
+            .range(from, to);
 
         if (search) {
             query = query.ilike('customer_name', `%${search}%`);
@@ -28,7 +39,7 @@ export default function OrdersPage() {
             query = query.eq('status', status);
         }
 
-        const { data, error } = await query;
+        const { data, error, count } = await query;
 
         if (!error && data) {
             const formatted = data.map(o => ({
@@ -36,17 +47,19 @@ export default function OrdersPage() {
                 total_amount: o.quantity * o.price_per_unit
             }));
             setOrders(formatted);
+            setRowCount(count || 0);
         }
+        setLoading(false);
     }, []);
 
     useEffect(() => {
-        fetchOrders();
-    }, []);
+        fetchOrders(searchTerm, statusFilter, page, pageSize);
+    }, [page, pageSize, searchTerm, statusFilter, fetchOrders]);
 
     const handleFilterChange = (search: string, status: string) => {
         setSearchTerm(search);
         setStatusFilter(status);
-        fetchOrders(search, status);
+        setPage(0);
     };
 
     return (
@@ -65,7 +78,7 @@ export default function OrdersPage() {
                             Orders Management
                         </Typography>
                         <Typography variant="body1" color="textSecondary">
-                            Manage and track your customer orders.
+                            Manage and track orders.
                         </Typography>
                     </Box>
 
@@ -98,7 +111,14 @@ export default function OrdersPage() {
                     searchTerm={searchTerm}
                     statusFilter={statusFilter}
                     onFilterChange={handleFilterChange}
-                    onRefresh={() => fetchOrders(searchTerm, statusFilter)}
+                    onRefresh={() => fetchOrders(searchTerm, statusFilter, page, pageSize)}
+                    paginationModel={{ page, pageSize }}
+                    onPaginationModelChange={(model) => {
+                        setPage(model.page);
+                        setPageSize(model.pageSize);
+                    }}
+                    rowCount={rowCount}
+                    loading={loading}
                 />
 
                 <Dialog
@@ -124,7 +144,7 @@ export default function OrdersPage() {
                     <DialogContent sx={{ pt: 0 }}>
                         <OrderForm onClose={() => {
                             setIsModalOpen(false);
-                            fetchOrders(searchTerm, statusFilter);
+                            fetchOrders(searchTerm, statusFilter, page, pageSize);
                         }} />
                     </DialogContent>
                 </Dialog>

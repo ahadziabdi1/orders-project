@@ -34,6 +34,11 @@ interface OrdersTableProps {
   statusFilter: string;
   onFilterChange: (search: string, status: string) => void;
   onRefresh?: () => void;
+  // NOVO: Parametri za paginaciju
+  paginationModel: { page: number; pageSize: number };
+  onPaginationModelChange: (model: { page: number; pageSize: number }) => void;
+  rowCount: number;
+  loading: boolean;
 }
 
 const getStatusColor = (status: string) => {
@@ -58,7 +63,11 @@ export default function OrdersTable({
   searchTerm,
   statusFilter,
   onFilterChange,
-  onRefresh
+  onRefresh,
+  paginationModel,
+  onPaginationModelChange,
+  rowCount,
+  loading
 }: OrdersTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -217,24 +226,6 @@ export default function OrdersTable({
   if (isMobile) {
     return (
       <Box sx={{ mt: 3 }}>
-        {/* Zaglavlje za mobile */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="h5" sx={{
-            fontWeight: 800,
-            color: '#0f172a',
-            mb: 1
-          }}>
-            Orders
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: '#64748b',
-            fontWeight: 500
-          }}>
-            Manage and filter your orders
-          </Typography>
-        </Box>
-
-        {/* Filter Box za mobile */}
         <Card sx={{
           borderRadius: '12px',
           border: '1px solid #e2e8f0',
@@ -483,7 +474,7 @@ export default function OrdersTable({
         </CardContent>
       </Card>
 
-      {/* DataGrid za Desktop */}
+      {/* DataGrid za Desktop sa serverskom paginacijom */}
       <Box sx={{
         width: '100%',
         backgroundColor: 'white',
@@ -497,52 +488,50 @@ export default function OrdersTable({
             All Orders
           </Typography>
           <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 500 }}>
-            {rows.length} {rows.length === 1 ? 'order' : 'orders'} found
+            {rowCount} {rowCount === 1 ? 'order' : 'orders'} found
             {(searchTerm || statusFilter !== 'ALL') && ' (filtered)'}
           </Typography>
         </Box>
 
-        {rows.length === 0 ? (
-          <Box sx={{ p: 4, textAlign: 'center' }}>
-            <Typography color="textSecondary">
-              {searchTerm || statusFilter !== 'ALL' ? 'No orders match your filters' : 'No orders found'}
-            </Typography>
-          </Box>
-        ) : (
-          <DataGrid
-            rows={rows.map(order => ({
-              ...order,
-              total_amount: order.total_amount || (order.quantity * order.price_per_unit)
-            }))}
-            columns={columns}
-            disableRowSelectionOnClick
-            autoHeight
-            sx={{
-              border: 'none',
-              px: 2,
-              '& .MuiDataGrid-columnHeaders': {
-                color: '#64748b',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                fontSize: '0.75rem',
-                letterSpacing: '0.5px',
-                borderBottom: '1px solid #f1f5f9'
-              },
+        <DataGrid
+          rows={rows.map(order => ({
+            ...order,
+            total_amount: order.total_amount || (order.quantity * order.price_per_unit)
+          }))}
+          columns={columns}
+          // --- NOVO: Konfiguracija za server-side paginaciju ---
+          paginationMode="server"
+          rowCount={rowCount}
+          loading={loading}
+          paginationModel={paginationModel}
+          onPaginationModelChange={onPaginationModelChange}
+          pageSizeOptions={[10, 20, 50]}
+          // ----------------------------------------------------
+          disableRowSelectionOnClick
+          autoHeight
+          sx={{
+            border: 'none',
+            px: 2,
+            '& .MuiDataGrid-columnHeaders': {
+              color: '#64748b',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              fontSize: '0.75rem',
+              letterSpacing: '0.5px',
+              borderBottom: '1px solid #f1f5f9'
+            },
+            '& .MuiDataGrid-cell': {
+              borderBottom: '1px solid #f1f5f9'
+            },
+            '& .MuiDataGrid-cell:focus': { outline: 'none' },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: '#f8fafc',
               '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #f1f5f9'
-              },
-              '& .MuiDataGrid-cell:focus': { outline: 'none' },
-              '& .MuiDataGrid-row:hover': {
-                backgroundColor: '#f8fafc',
-                '& .MuiDataGrid-cell': {
-                  borderBottomColor: '#e2e8f0'
-                }
+                borderBottomColor: '#e2e8f0'
               }
-            }}
-            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            pageSizeOptions={[10, 20, 50]}
-          />
-        )}
+            }
+          }}
+        />
       </Box>
 
       <ActionMenu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose} orderId={selectedOrderId} onDelete={handleDeleteClick} router={router} />

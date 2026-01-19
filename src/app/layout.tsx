@@ -32,7 +32,12 @@ export default function RootLayout({
       >
         <EmotionRegistry>
           <ThemeProvider>
-            <Toaster position="top-right" />
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 5000,
+              }}
+            />
             {children}
           </ThemeProvider>
         </EmotionRegistry>

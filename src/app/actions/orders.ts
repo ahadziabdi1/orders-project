@@ -2,62 +2,45 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { revalidatePath } from "next/cache";
+import { OrderFormData, Order, ActionResponse } from "@/app/types/orders";
 
-export async function createOrderAction(formData: any) {
-    const { error } = await supabase.from("orders").insert([
-        {
-            product_name: formData.product_name,
-            customer_name: formData.customer_name,
-            quantity: Number(formData.quantity),
-            price_per_unit: Number(formData.price_per_unit),
-            delivery_address: formData.delivery_address,
-            status: formData.status,
-        },
-    ]);
+export async function createOrderAction(formData: OrderFormData): Promise<ActionResponse> {
+    const { error } = await supabase.from("orders").insert([formData]);
 
-    if (error) {
-        return { success: false, message: error.message };
-    }
+    if (error) return { success: false, message: error.message };
 
     revalidatePath("/orders");
     return { success: true, message: "Order successfully created!" };
 }
 
-export async function deleteOrderAction(orderId: string) {
+export async function deleteOrderAction(orderId: string): Promise<ActionResponse> {
     const { error } = await supabase.from("orders").delete().eq("id", orderId);
 
-    if (error) {
-        return { success: false, message: error.message };
-    }
+    if (error) return { success: false, message: error.message };
 
     revalidatePath("/orders");
     return { success: true, message: "Order deleted successfully" };
 }
 
-export async function updateOrderAction(orderId: string, formData: any) {
+export async function updateOrderAction(
+    orderId: string,
+    formData: OrderFormData
+): Promise<ActionResponse> {
     const { error } = await supabase
         .from("orders")
-        .update({
-            product_name: formData.product_name,
-            customer_name: formData.customer_name,
-            quantity: Number(formData.quantity),
-            price_per_unit: Number(formData.price_per_unit),
-            delivery_address: formData.delivery_address,
-            status: formData.status,
-        })
+        .update(formData)
         .eq("id", orderId);
 
-    if (error) {
-        return { success: false, message: error.message };
-    }
+    if (error) return { success: false, message: error.message };
 
     revalidatePath("/orders");
     revalidatePath(`/orders/${orderId}`);
-
     return { success: true, message: "Order successfully updated!" };
 }
 
-export async function getOrdersAction(filters?: { searchTerm?: string; status?: string }) {
+export async function getOrdersAction(
+    filters?: { searchTerm?: string; status?: string }
+): Promise<ActionResponse<Order[]>> {
     let query = supabase
         .from("orders")
         .select("*")
@@ -77,5 +60,5 @@ export async function getOrdersAction(filters?: { searchTerm?: string; status?: 
         return { success: false, message: error.message, data: [] };
     }
 
-    return { success: true, data };
+    return { success: true, message: "Fetched", data: (data as Order[]) || [] };
 }

@@ -6,7 +6,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { supabase } from '@/lib/supabaseClient';
 import {
     Container, Paper, Typography, Button, Box, TextField,
-    MenuItem, CircularProgress, SxProps, Theme, Divider, Chip, IconButton
+    MenuItem, CircularProgress, Divider, Chip, IconButton
 } from '@mui/material';
 import {
     PersonOutline, ShoppingBagOutlined, NumbersOutlined,
@@ -14,18 +14,17 @@ import {
 } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import { updateOrderAction } from '@/app/actions/orders';
-import { Order, getStatusColor } from '../../components/orders-table/types';
+import { getStatusColor } from '../../components/orders-table/types';
 
-type OrderFormData = {
-    product_name: string;
-    customer_name: string;
-    quantity: number;
-    price_per_unit: number;
-    delivery_address: string;
-    status: string;
-};
+import {
+    Order,
+    OrderFormData,
+    OrderStatus,
+    ActionResponse,
+    DetailBlockProps
+} from '@/app/types/orders';
 
-const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType<{ sx?: SxProps<Theme> }>, label: string }) => (
+const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
         <Icon sx={{ fontSize: 18, color: 'text.secondary' }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#374151' }}>
@@ -34,8 +33,18 @@ const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType<{ sx?: S
     </Box>
 );
 
+const DetailBlock = ({ icon, label, value, isHighlight = false }: DetailBlockProps) => (
+    <Box>
+        <LabelWithIcon icon={icon} label={label} />
+        <Typography variant="body1" sx={{ fontWeight: 700, color: isHighlight ? '#0f172a' : '#1e293b', ml: { xs: 0, sm: 4 }, mt: 1 }}>
+            {value}
+        </Typography>
+    </Box>
+);
+
 export default function OrderDetailsPage() {
-    const { id } = useParams();
+    const params = useParams();
+    const id = params.id as string;
     const searchParams = useSearchParams();
     const router = useRouter();
     const isEditMode = searchParams.get('edit') === 'true';
@@ -49,7 +58,6 @@ export default function OrderDetailsPage() {
         handleSubmit,
         formState: { errors },
         reset,
-        setValue,
         control
     } = useForm<OrderFormData>({
         defaultValues: {
@@ -64,66 +72,59 @@ export default function OrderDetailsPage() {
 
     useEffect(() => {
         const fetchOrder = async () => {
-            const { data, error } = await supabase.from('orders').select('*').eq('id', id).single();
-            if (!error && data) {
-                setOrder(data);
-                setValue('customer_name', data.customer_name || '');
-                setValue('product_name', data.product_name || '');
-                setValue('quantity', data.quantity || 1);
-                setValue('price_per_unit', data.price_per_unit || 0);
-                setValue('delivery_address', data.delivery_address || '');
-                setValue('status', data.status || 'CREATED');
-            } else {
+            setLoading(true);
+
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) {
                 toast.error("Error loading order details");
+                setOrder(null);
+            } else if (data) {
+                const typedData = data as Order;
+                setOrder(typedData);
+                reset({
+                    customer_name: typedData.customer_name ?? '',
+                    product_name: typedData.product_name ?? '',
+                    quantity: typedData.quantity ?? 1,
+                    price_per_unit: typedData.price_per_unit ?? 0,
+                    delivery_address: typedData.delivery_address ?? '',
+                    status: typedData.status ?? 'CREATED'
+                });
             }
             setLoading(false);
         };
 
-        if (id) {
-            fetchOrder();
-        }
-    }, [id, setValue, isEditMode]);
+        if (id) fetchOrder();
+    }, [id, reset]);
 
-    const handleUpdate = async (data: OrderFormData) => {
+    const handleUpdate = async (formData: OrderFormData) => {
         setIsUpdating(true);
         try {
-            const result = await updateOrderAction(id as string, data);
+            const result: ActionResponse = await updateOrderAction(id, formData);
             if (result.success) {
                 toast.success(result.message);
 
-                setOrder(prev => {
-                    if (!prev) return null;
+                setOrder(prev => prev ? { ...prev, ...formData } : null);
+                reset(formData);
 
-                    return {
-                        ...prev,
-                        ...data,
-                        total_amount: data.quantity * data.price_per_unit
-                    };
-                });
-
-                router.refresh();
                 router.push(`/orders/${id}`);
             } else {
                 toast.error(result.message || "Update failed");
             }
         } catch (error) {
             toast.error("An unexpected error occurred");
+            console.log("An unexpected error occurred", error)
         } finally {
             setIsUpdating(false);
         }
     };
 
     const handleCancel = () => {
-        if (order) {
-            reset({
-                customer_name: order.customer_name,
-                product_name: order.product_name,
-                quantity: order.quantity,
-                price_per_unit: order.price_per_unit,
-                delivery_address: order.delivery_address,
-                status: order.status
-            });
-        }
+        if (order) reset(order);
         router.push(`/orders/${id}`);
     };
 
@@ -135,9 +136,7 @@ export default function OrderDetailsPage() {
 
     if (!order) return (
         <Container maxWidth="md" sx={{ py: { xs: 3, md: 8 } }}>
-            <Typography variant="h6" color="error">
-                Order not found
-            </Typography>
+            <Typography variant="h6" color="error">Order not found</Typography>
         </Container>
     );
 
@@ -182,7 +181,7 @@ export default function OrderDetailsPage() {
                         </Typography>
                     </Box>
                     <Chip
-                        label={order.status?.toUpperCase()}
+                        label={order.status.toUpperCase()}
                         sx={{
                             fontWeight: 700,
                             borderRadius: '8px',
@@ -257,12 +256,22 @@ export default function OrderDetailsPage() {
                                     fullWidth
                                     type="number"
                                     disabled={isUpdating}
-                                    inputProps={{ step: "0.01", min: 0 }}
+                                    slotProps={{
+                                        input: {
+                                            inputProps: {
+                                                step: "0.01",
+                                                min: 0.01
+                                            }
+                                        }
+                                    }}
                                     {...register("price_per_unit", {
                                         required: "Price is required",
                                         min: {
-                                            value: 0,
-                                            message: "Price cannot be negative"
+                                            value: 0.01,
+                                            message: "Price must be greater than 0"
+                                        },
+                                        validate: {
+                                            positive: (value) => value > 0 || "Price must be greater than 0"
                                         },
                                         valueAsNumber: true
                                     })}
@@ -276,6 +285,7 @@ export default function OrderDetailsPage() {
                             <LabelWithIcon icon={HomeOutlined} label="Delivery Address" />
                             <TextField
                                 fullWidth
+                                multiline
                                 rows={3}
                                 disabled={isUpdating}
                                 placeholder="Enter full delivery address"
@@ -301,11 +311,11 @@ export default function OrderDetailsPage() {
                                         select
                                         fullWidth
                                         disabled={isUpdating}
-                                        value={field.value || 'CREATED'}
+                                        value={field.value}
                                         onChange={field.onChange}
                                         sx={{ mt: 1 }}
                                     >
-                                        {['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'].map((s) => (
+                                        {(['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'] as OrderStatus[]).map((s) => (
                                             <MenuItem key={s} value={s}>{s}</MenuItem>
                                         ))}
                                     </TextField>
@@ -336,12 +346,17 @@ export default function OrderDetailsPage() {
                             <DetailBlock icon={PersonOutline} label="Customer Name" value={order.customer_name} />
                             <DetailBlock icon={ShoppingBagOutlined} label="Product" value={order.product_name} />
                             <DetailBlock icon={NumbersOutlined} label="Quantity" value={order.quantity} />
-                            <DetailBlock icon={PaidOutlined} label="Total Amount" value={`$${(order.quantity * order.price_per_unit).toFixed(2)}`} isHighlight />
+                            <DetailBlock
+                                icon={PaidOutlined}
+                                label="Total Amount"
+                                value={`$${(order.quantity * order.price_per_unit).toFixed(2)}`}
+                                isHighlight
+                            />
                         </Box>
                         <Box sx={{ p: 2.5, backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
                             <LabelWithIcon icon={HomeOutlined} label="Delivery Address" />
                             <Typography variant="body1" sx={{ fontWeight: 500, color: '#334155', ml: { xs: 0, sm: 4 }, mt: 1 }}>
-                                {order.delivery_address}
+                                {order.delivery_address || 'N/A'}
                             </Typography>
                         </Box>
                         <Button
@@ -355,16 +370,5 @@ export default function OrderDetailsPage() {
                 )}
             </Paper>
         </Container>
-    );
-}
-
-function DetailBlock({ icon, label, value, isHighlight = false }: any) {
-    return (
-        <Box>
-            <LabelWithIcon icon={icon} label={label} />
-            <Typography variant="body1" sx={{ fontWeight: 700, color: isHighlight ? '#0f172a' : '#1e293b', ml: { xs: 0, sm: 4 }, mt: 1 }}>
-                {value}
-            </Typography>
-        </Box>
     );
 }

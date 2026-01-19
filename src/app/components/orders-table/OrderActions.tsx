@@ -73,7 +73,11 @@ export function DeleteDialog({ open, onClose, onConfirm }: DeleteDialogProps) {
         <Dialog
             open={open}
             onClose={onClose}
-            PaperProps={{ sx: { borderRadius: '16px', p: 1, maxWidth: '400px' } }}
+            slotProps={{
+                paper: {
+                    sx: { borderRadius: '12px', p: 1, maxWidth: '400px' }
+                }
+            }}
         >
             <DialogTitle sx={{ fontWeight: 800, pt: 3, pb: 1 }}>Delete Order</DialogTitle>
             <DialogContent>

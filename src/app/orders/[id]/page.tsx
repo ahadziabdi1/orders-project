@@ -160,7 +160,7 @@ export default function OrderDetailsPage() {
 
             <Paper elevation={0} sx={{
                 p: { xs: 3, md: 5 },
-                borderRadius: '20px',
+                borderRadius: '12px',
                 border: '1px solid #e2e8f0',
                 boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
             }}>

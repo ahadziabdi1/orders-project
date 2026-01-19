@@ -1,17 +1,16 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, ChangeEvent } from 'react'; 
 import { DataGrid } from '@mui/x-data-grid';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
-import { Order } from './orders-table/types';
+import { Order } from '@/app/types/orders';
 import { getColumns } from './orders-table/columns';
 import { TableFilters } from './orders-table/TableFilters';
 import { OrderMobileCard } from './orders-table/OrderMobileCard';
 import { ActionMenu, DeleteDialog } from './orders-table/OrderActions';
-
 import { deleteOrderAction } from '@/app/actions/orders';
 
 interface OrdersTableProps {
@@ -73,29 +72,22 @@ export default function OrdersTable(props: OrdersTableProps) {
 
   const columns = useMemo(() => getColumns(handleMenuOpen), []);
 
-  const processedRows = useMemo(() =>
-    rows.map(order => ({
-      ...order,
-      total_amount: order.total_amount || (order.quantity * order.price_per_unit)
-    })), [rows]
-  );
-
   return (
     <Box sx={{ mt: 3 }}>
       <TableFilters
         searchTerm={searchTerm}
         statusFilter={statusFilter}
-        onSearchChange={(e) => onFilterChange(e.target.value, statusFilter)}
+        onSearchChange={(e: ChangeEvent<HTMLInputElement>) => onFilterChange(e.target.value, statusFilter)}
         onStatusChange={(newStatus) => onFilterChange(searchTerm, newStatus)}
         onReset={() => onFilterChange('', 'ALL')}
       />
 
       {isMobile ? (
         <Stack spacing={2}>
-          {processedRows.length === 0 ? (
+          {rows.length === 0 ? (
             <Typography align="center" sx={{ py: 4, color: 'text.secondary' }}>No orders found</Typography>
           ) : (
-            processedRows.map((order) => (
+            rows.map((order) => (
               <OrderMobileCard
                 key={order.id}
                 order={order}
@@ -105,13 +97,20 @@ export default function OrdersTable(props: OrdersTableProps) {
           )}
         </Stack>
       ) : (
-        <Box sx={{ width: '100%', backgroundColor: 'white', borderRadius: '12px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+        <Box sx={{
+          width: '100%',
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          overflow: 'hidden',
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
+        }}>
           <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9' }}>
             <Typography variant="h6" sx={{ fontWeight: 800 }}>All Orders</Typography>
             <Typography variant="body2" color="textSecondary">{rowCount} orders found</Typography>
           </Box>
           <DataGrid
-            rows={processedRows}
+            rows={rows} 
             columns={columns}
             paginationMode="server"
             rowCount={rowCount}
@@ -119,9 +118,12 @@ export default function OrdersTable(props: OrdersTableProps) {
             paginationModel={paginationModel}
             onPaginationModelChange={onPaginationModelChange}
             pageSizeOptions={[10, 20, 50]}
-            autoHeight
             disableRowSelectionOnClick
-            sx={{ border: 'none', px: 2 }}
+            sx={{
+              border: 'none',
+              px: 2,
+              '& .MuiDataGrid-cell:focus': { outline: 'none' }
+            }}
           />
         </Box>
       )}

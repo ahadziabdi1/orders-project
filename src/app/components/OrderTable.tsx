@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, ChangeEvent } from 'react'; 
-import { DataGrid } from '@mui/x-data-grid';
+import { useState, useMemo, ChangeEvent } from 'react';
+import { DataGrid, GridSortModel } from '@mui/x-data-grid';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -23,12 +23,23 @@ interface OrdersTableProps {
   onPaginationModelChange: (model: { page: number; pageSize: number }) => void;
   rowCount: number;
   loading: boolean;
+  sortModel: GridSortModel;
+  onSortChange: (model: GridSortModel) => void;
 }
 
 export default function OrdersTable(props: OrdersTableProps) {
   const {
-    rows, searchTerm, statusFilter, onFilterChange, onRefresh,
-    paginationModel, onPaginationModelChange, rowCount, loading
+    rows,
+    searchTerm,
+    statusFilter,
+    onFilterChange,
+    onRefresh,
+    paginationModel,
+    onPaginationModelChange,
+    rowCount,
+    loading,
+    sortModel,
+    onSortChange
   } = props;
 
   const theme = useTheme();
@@ -110,19 +121,47 @@ export default function OrdersTable(props: OrdersTableProps) {
             <Typography variant="body2" color="textSecondary">{rowCount} orders found</Typography>
           </Box>
           <DataGrid
-            rows={rows} 
+            rows={rows}
             columns={columns}
+            sortingMode="server"
+            sortModel={sortModel}
+            onSortModelChange={onSortChange}
             paginationMode="server"
             rowCount={rowCount}
             loading={loading}
             paginationModel={paginationModel}
             onPaginationModelChange={onPaginationModelChange}
             pageSizeOptions={[10, 20, 50]}
+            disableColumnMenu
+            disableColumnFilter
+            disableColumnSelector
             disableRowSelectionOnClick
             sx={{
               border: 'none',
               px: 2,
-              '& .MuiDataGrid-cell:focus': { outline: 'none' }
+              '& .MuiDataGrid-cell:focus': { outline: 'none' },
+              '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within': {
+                outline: 'none',
+              },
+              '& .MuiDataGrid-columnHeaderTitle': {
+                fontWeight: 700,
+                color: '#475569'
+              },
+              '& .MuiDataGrid-iconButtonContainer': {
+                visibility: 'visible', 
+                width: 'auto',
+              },
+              '& .MuiDataGrid-sortIcon': {
+                opacity: '1 !important', 
+                color: '#cbd5e1 !important', 
+                fontSize: '1.2rem',
+              },
+              '& .MuiDataGrid-columnHeader--sorted .MuiDataGrid-sortIcon': {
+                color: theme.palette.primary.main, 
+              },
+              '& .MuiDataGrid-columnHeaderTitleContainer': {
+                justifyContent: 'space-between',
+              }
             }}
           />
         </Box>

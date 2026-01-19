@@ -14,7 +14,7 @@ export const TableFilters = ({ searchTerm, statusFilter, onSearchChange, onStatu
         <CardContent sx={{ p: 3 }}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
                 <TextField
-                    placeholder="Search orders..."
+                    placeholder="Search by customer name..."
                     size="small"
                     fullWidth
                     value={searchTerm}

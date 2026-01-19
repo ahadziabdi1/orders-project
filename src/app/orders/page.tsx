@@ -16,6 +16,7 @@ import {
 import OrdersTable from '@/app/components/OrderTable';
 import OrderForm from '@/app/components/OrderForm';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
+import { GridSortModel } from '@mui/x-data-grid';
 
 import { Order, OrderStatus } from '@/app/types/orders';
 
@@ -26,17 +27,26 @@ export default function OrdersPage() {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
+    const [sortModel, setSortModel] = useState<GridSortModel>([
+        { field: 'created_at', sort: 'desc' }
+    ]);
+
     const { data, isLoading, refetch } = useQuery({
-        queryKey: ['orders', page, pageSize, searchTerm, statusFilter],
+        queryKey: ['orders', page, pageSize, searchTerm, statusFilter, sortModel],
         queryFn: async () => {
             const from = page * pageSize;
             const to = from + pageSize - 1;
 
             let query = supabase
                 .from('orders')
-                .select('*', { count: 'exact' })
-                .order('created_at', { ascending: false })
-                .range(from, to);
+                .select('*', { count: 'exact' });
+
+            if (sortModel.length > 0) {
+                const { field, sort } = sortModel[0];
+                query = query.order(field, { ascending: sort === 'asc' });
+            } else {
+                query = query.order('created_at', { ascending: false });
+            }
 
             if (searchTerm) {
                 query = query.ilike('customer_name', `%${searchTerm}%`);
@@ -45,6 +55,8 @@ export default function OrdersPage() {
             if (statusFilter !== 'ALL') {
                 query = query.eq('status', statusFilter as OrderStatus);
             }
+
+            query = query.range(from, to);
 
             const { data, error, count } = await query;
             if (error) throw error;
@@ -128,6 +140,8 @@ export default function OrdersPage() {
                         setPage(model.page);
                         setPageSize(model.pageSize);
                     }}
+                    sortModel={sortModel}
+                    onSortChange={(model) => setSortModel(model)}
                     rowCount={data?.totalCount ?? 0}
                     loading={isLoading}
                 />

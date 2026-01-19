@@ -1,7 +1,7 @@
 import { GridColDef } from '@mui/x-data-grid';
 import { Chip, IconButton, Box, Typography } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
-import { getStatusColor } from './types';
+import { getStatusColor } from '@/app/types/orders';
 
 export const getColumns = (handleMenuOpen: (e: any, id: string) => void): GridColDef[] => [
     {

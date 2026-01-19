@@ -1,8 +1,13 @@
 import { Card, CardContent, Box, Typography, IconButton, Chip } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
-import { Order, getStatusColor } from './types';
+import { Order, getStatusColor } from '@/app/types/orders';
 
-export const OrderMobileCard = ({ order, onMenuOpen }: { order: Order; onMenuOpen: (e: any, id: string) => void }) => {
+interface OrderMobileCardProps {
+    order: Order;
+    onMenuOpen: (event: React.MouseEvent<HTMLButtonElement>, id: string) => void;
+}
+
+export const OrderMobileCard = ({ order, onMenuOpen }: OrderMobileCardProps) => {
     const style = getStatusColor(order.status);
     const total = order.total_amount || (order.quantity * order.price_per_unit);
 

@@ -14,7 +14,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import { updateOrderAction } from '@/app/actions/orders';
-import { getStatusColor } from '../../components/orders-table/types';
+import { getStatusColor } from '@/app/types/orders'
 
 import {
     Order,
@@ -236,7 +236,13 @@ export default function OrderDetailsPage() {
                                     fullWidth
                                     type="number"
                                     disabled={isUpdating}
-                                    inputProps={{ min: 1 }}
+                                    slotProps={{
+                                        input: {
+                                            inputProps: {
+                                                min: 1
+                                            }
+                                        }
+                                    }}
                                     {...register("quantity", {
                                         required: "Quantity is required",
                                         min: {

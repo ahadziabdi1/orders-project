@@ -6,15 +6,7 @@ import { TextField, Button, Box, Typography, MenuItem, SxProps, Theme, CircularP
 import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, LocalOfferOutlined, HomeOutlined } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { createOrderAction } from "@/app/actions/orders";
-
-type OrderFormData = {
-    product_name: string;
-    customer_name: string;
-    quantity: number;
-    price_per_unit: number;
-    delivery_address: string;
-    status: string;
-};
+import { OrderFormData } from "../types/orders";
 
 interface OrderFormProps {
     onClose: () => void;
@@ -51,6 +43,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
             }
         } catch (error) {
             toast.error("An unexpected error occurred");
+            console.log("An unexpected error occurred", error);
         } finally {
             setIsLoading(false);
         }
@@ -90,7 +83,13 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                             fullWidth
                             type="number"
                             disabled={isLoading}
-                            inputProps={{ min: 1 }}
+                            slotProps={{
+                                input: {
+                                    inputProps: {
+                                        min: 1
+                                    }
+                                }
+                            }}
                             {...register("quantity", { required: true, min: 1 })}
                             error={!!errors.quantity}
                         />
@@ -101,7 +100,14 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                             fullWidth
                             type="number"
                             disabled={isLoading}
-                            inputProps={{ step: "0.01", min: 0 }}
+                            slotProps={{
+                                input: {
+                                    inputProps: {
+                                        step: "0.01",
+                                        min: 0.01
+                                    }
+                                }
+                            }}
                             {...register("price_per_unit", { required: "Price is required", min: 0 })}
                             error={!!errors.price_per_unit}
                             helperText={errors.price_per_unit?.message}

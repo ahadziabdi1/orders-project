@@ -47,7 +47,6 @@ export default function OrdersTable(props: OrdersTableProps) {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    setSelectedOrderId(null);
   };
 
   const handleDeleteConfirm = async () => {
@@ -57,6 +56,7 @@ export default function OrdersTable(props: OrdersTableProps) {
       if (result.success) {
         toast.success(result.message || 'Order deleted successfully');
         setDeleteDialogOpen(false);
+        setSelectedOrderId(null);
         if (onRefresh) onRefresh();
       } else {
         toast.error(result.message || 'Failed to delete order');
@@ -64,6 +64,11 @@ export default function OrdersTable(props: OrdersTableProps) {
     } catch {
       toast.error('An unexpected error occurred');
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setSelectedOrderId(null);
   };
 
   const columns = useMemo(() => getColumns(handleMenuOpen), []);
@@ -132,7 +137,7 @@ export default function OrdersTable(props: OrdersTableProps) {
 
       <DeleteDialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={handleCancelDelete}
         onConfirm={handleDeleteConfirm}
       />
     </Box>

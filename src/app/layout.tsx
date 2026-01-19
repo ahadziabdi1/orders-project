@@ -5,6 +5,8 @@ import EmotionRegistry from "./registry";
 import ThemeProvider from "./components/ThemeProvider";
 import { Toaster } from "react-hot-toast";
 
+import Providers from "./providers";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -27,18 +29,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <EmotionRegistry>
           <ThemeProvider>
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 5000,
-              }}
-            />
-            {children}
+            <Providers>
+              <Toaster
+                position="top-right"
+                toastOptions={{
+                  duration: 5000,
+                }}
+              />
+              {children}
+            </Providers>
           </ThemeProvider>
         </EmotionRegistry>
       </body>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
 import {
     Container,
@@ -19,47 +20,36 @@ import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { Order, OrderStatus } from '@/app/types/orders';
 
 export default function OrdersPage() {
-    // 1. Properly typed state
-    const [orders, setOrders] = useState<Order[]>([]);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-
     const [page, setPage] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(10);
-    const [rowCount, setRowCount] = useState<number>(0);
-    const [loading, setLoading] = useState<boolean>(false);
-
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-    const fetchOrders = useCallback(async (
-        search?: string,
-        status?: string,
-        currentPage = 0,
-        currentSize = 10
-    ) => {
-        setLoading(true);
+    const { data, isLoading, refetch } = useQuery({
+        queryKey: ['orders', page, pageSize, searchTerm, statusFilter],
+        queryFn: async () => {
+            const from = page * pageSize;
+            const to = from + pageSize - 1;
 
-        const from = currentPage * currentSize;
-        const to = from + currentSize - 1;
+            let query = supabase
+                .from('orders')
+                .select('*', { count: 'exact' })
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
-        let query = supabase
-            .from('orders')
-            .select('*', { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .range(from, to);
+            if (searchTerm) {
+                query = query.ilike('customer_name', `%${searchTerm}%`);
+            }
 
-        if (search) {
-            query = query.ilike('customer_name', `%${search}%`);
-        }
+            if (statusFilter !== 'ALL') {
+                query = query.eq('status', statusFilter as OrderStatus);
+            }
 
-        if (status && status !== 'ALL') {
-            query = query.eq('status', status as OrderStatus);
-        }
+            const { data, error, count } = await query;
+            if (error) throw error;
 
-        const { data, error, count } = await query;
-
-        if (!error && data) {
-            const formatted: Order[] = data.map((o) => ({
+            const formatted: Order[] = (data || []).map((o) => ({
                 id: o.id,
                 product_name: o.product_name,
                 customer_name: o.customer_name,
@@ -71,15 +61,12 @@ export default function OrdersPage() {
                 total_amount: o.quantity * o.price_per_unit
             }));
 
-            setOrders(formatted);
-            setRowCount(count || 0);
+            return {
+                orders: formatted,
+                totalCount: count || 0
+            };
         }
-        setLoading(false);
-    }, []);
-
-    useEffect(() => {
-        fetchOrders(searchTerm, statusFilter, page, pageSize);
-    }, [page, pageSize, searchTerm, statusFilter, fetchOrders]);
+    });
 
     const handleFilterChange = (search: string, status: string) => {
         setSearchTerm(search);
@@ -131,18 +118,18 @@ export default function OrdersPage() {
                 </Box>
 
                 <OrdersTable
-                    rows={orders}
+                    rows={data?.orders ?? []}
                     searchTerm={searchTerm}
                     statusFilter={statusFilter}
                     onFilterChange={handleFilterChange}
-                    onRefresh={() => fetchOrders(searchTerm, statusFilter, page, pageSize)}
+                    onRefresh={refetch}
                     paginationModel={{ page, pageSize }}
                     onPaginationModelChange={(model) => {
                         setPage(model.page);
                         setPageSize(model.pageSize);
                     }}
-                    rowCount={rowCount}
-                    loading={loading}
+                    rowCount={data?.totalCount ?? 0}
+                    loading={isLoading}
                 />
 
                 <Dialog
@@ -167,7 +154,7 @@ export default function OrdersPage() {
                     <DialogContent sx={{ pt: 0 }}>
                         <OrderForm onClose={() => {
                             setIsModalOpen(false);
-                            fetchOrders(searchTerm, statusFilter, page, pageSize);
+                            refetch();
                         }} />
                     </DialogContent>
                 </Dialog>

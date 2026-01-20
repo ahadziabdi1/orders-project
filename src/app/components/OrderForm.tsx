@@ -90,7 +90,14 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                     }
                                 }
                             }}
-                            {...register("quantity", { required: true, min: 1 })}
+                            {...register("quantity", {
+                                required: "Quantity is required",
+                                min: {
+                                    value: 1,
+                                    message: "Quantity must be at least 1"
+                                },
+                                valueAsNumber: true
+                            })}
                             error={!!errors.quantity}
                         />
                     </Box>
@@ -108,7 +115,17 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                     }
                                 }
                             }}
-                            {...register("price_per_unit", { required: "Price is required", min: 0 })}
+                            {...register("price_per_unit", {
+                                required: "Price is required",
+                                min: {
+                                    value: 0.01,
+                                    message: "Price must be greater than 0"
+                                },
+                                validate: {
+                                    positive: (value) => value > 0 || "Price must be greater than 0"
+                                },
+                                valueAsNumber: true
+                            })}
                             error={!!errors.price_per_unit}
                             helperText={errors.price_per_unit?.message}
                         />

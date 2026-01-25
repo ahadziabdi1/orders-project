@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Orders Management System
 
-## Getting Started
+A modern web application for managing orders, built with Next.js, TypeScript, and PostgreSQL via Supabase.
 
-First, run the development server:
+## ✨ Features
 
+- **View all orders** with sorting and filtering
+- **Create new orders** with form validation
+- **Edit existing orders** (update status, quantity, etc.)
+- **Delete orders** with confirmation dialog
+- **Order details page** for individual order view
+- **Pagination** for large datasets
+- **Real-time updates**
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Next.js 14 (App Router) + TypeScript
+- **UI:** Material-UI (MUI)
+- **Forms:** React Hook Form + Zod validation
+- **Backend:** Next.js Server Actions
+- **Database:** PostgreSQL (Supabase)
+- **Hosting:** Supabase (Database + Auth)
+
+## 🚀 Quick Start
+
+1. **Clone and install**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/orders-app.git
+cd orders-app
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Set up environment variables**
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Run the development server**
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Open in browser**
+```
+http://localhost:3000
+```
 
-## Learn More
+## 📁 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+- `/app` - Next.js App Router pages and layouts
+- `/components` - Reusable React components
+- `/lib` - Utility functions (Supabase client, etc.)
+- `/types` - TypeScript type definitions
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🗄️ Database Schema
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The `orders` table includes:
+- `id` (UUID primary key)
+- `product_name`, `customer`, `quantity`, `price`
+- `status` (CREATED, PROCESSING, SHIPPED, DELIVERED, CANCELLED)
+- `created_date`, `delivery_address`

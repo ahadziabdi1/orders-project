@@ -12,6 +12,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { supabase } from "@/lib/supabaseClient";
+import { createOrderAction } from "@/app/actions/orders";
 import { OrderFormData, Product, Customer } from "@/app/types/orders";
 
 interface OrderFormProps {
@@ -67,12 +68,13 @@ export default function OrderForm({ onClose }: OrderFormProps) {
     const onSubmit = async (data: OrderFormData) => {
         setIsLoading(true);
         try {
-            const { error } = await supabase.from('orders').insert([data]);
-            if (!error) {
-                toast.success("Order created successfully!");
+            const result = await createOrderAction(data);
+
+            if (result.success) {
+                toast.success(result.message);
                 onClose();
             } else {
-                toast.error(error.message);
+                toast.error(result.message);
             }
         } catch (error) {
             toast.error("An unexpected error occurred");

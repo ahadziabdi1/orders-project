@@ -6,10 +6,12 @@ import {
     Box, Typography, useMediaQuery, useTheme, Stack, IconButton
 } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
+import { toast } from 'react-hot-toast';
+
 import { getProductColumns } from './columns';
 import ProductDetailsModal from '@/app/components/products/ProductDetailsModal';
-
 import { ActionMenu, DeleteDialog } from '@/app/components/products/table/ProductActions';
+import { deleteProductAction } from '@/app/actions/products';
 
 interface ProductsTableProps {
     rows: any[];
@@ -20,13 +22,12 @@ interface ProductsTableProps {
     sortModel: GridSortModel;
     onSortChange: (model: GridSortModel) => void;
     onRefresh: () => void;
-    onDelete?: (id: string) => void;
 }
 
 export default function ProductsTable(props: ProductsTableProps) {
     const {
         rows, loading, rowCount, paginationModel,
-        onPaginationModelChange, sortModel, onSortChange, onRefresh, onDelete
+        onPaginationModelChange, sortModel, onSortChange, onRefresh
     } = props;
 
     const theme = useTheme();
@@ -59,11 +60,28 @@ export default function ProductsTable(props: ProductsTableProps) {
         handleMenuClose();
     };
 
-    const handleConfirmDelete = () => {
-        if (selectedId && onDelete) {
-            onDelete(selectedId);
+    const handleConfirmDelete = async () => {
+        if (!selectedId) return;
+
+        try {
+            const result = await deleteProductAction(selectedId);
+
+            if (result.success) {
+                toast.success(result.message || 'Product deleted successfully');
+                setDeleteDialogOpen(false);
+                setSelectedId(null);
+                onRefresh();
+            } else {
+                toast.error(result.message || 'Failed to delete product');
+            }
+        } catch (error) {
+            toast.error('An unexpected error occurred');
         }
+    };
+
+    const handleCancelDelete = () => {
         setDeleteDialogOpen(false);
+        setSelectedId(null);
     };
 
     const columns = useMemo(() => getProductColumns(handleMenuOpen), []);
@@ -157,13 +175,13 @@ export default function ProductsTable(props: ProductsTableProps) {
                 onClose={handleMenuClose}
                 onView={() => handleAction('view')}
                 onEdit={() => handleAction('edit')}
-                orderId={selectedId} 
+                orderId={selectedId}
                 onDelete={() => handleAction('delete')}
             />
 
             <DeleteDialog
                 open={deleteDialogOpen}
-                onClose={() => setDeleteDialogOpen(false)}
+                onClose={handleCancelDelete}
                 onConfirm={handleConfirmDelete}
             />
 
@@ -173,6 +191,7 @@ export default function ProductsTable(props: ProductsTableProps) {
                 productId={selectedId}
                 initialMode={modalMode}
                 onSuccess={() => {
+                    toast.success(`Product ${modalMode === 'edit' ? 'updated' : 'created'} successfully`);
                     onRefresh();
                     setModalOpen(false);
                 }}

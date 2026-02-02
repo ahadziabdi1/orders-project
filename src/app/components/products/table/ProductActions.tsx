@@ -3,7 +3,6 @@ import {
     DialogTitle, DialogContent, DialogActions, Button, Typography
 } from '@mui/material';
 import { Launch, EditOutlined, DeleteOutline } from '@mui/icons-material';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 interface ActionMenuProps {
     anchorEl: HTMLElement | null;
@@ -55,7 +54,7 @@ export function ActionMenu({
 
             <MenuItem onClick={onEdit}>
                 <EditOutlined sx={{ fontSize: 18, color: '#64748b' }} />
-                <ListItemText primary="Edit Order" />
+                <ListItemText primary="Edit Product" />
             </MenuItem>
 
             <Divider sx={{ my: 1, borderColor: '#f1f5f9' }} />
@@ -65,7 +64,7 @@ export function ActionMenu({
                 sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2 !important' } }}
             >
                 <DeleteOutline sx={{ fontSize: 18 }} />
-                <ListItemText primary="Delete Order" />
+                <ListItemText primary="Delete Product" />
             </MenuItem>
         </Menu>
     );
@@ -88,7 +87,7 @@ export function DeleteDialog({ open, onClose, onConfirm }: DeleteDialogProps) {
                 }
             }}
         >
-            <DialogTitle sx={{ fontWeight: 800, pt: 3, pb: 1 }}>Delete Order</DialogTitle>
+            <DialogTitle sx={{ fontWeight: 800, pt: 3, pb: 1 }}>Delete Product</DialogTitle>
             <DialogContent>
                 <Typography sx={{ color: '#64748b' }}>
                     Are you sure? This action is permanent and cannot be undone.
@@ -110,7 +109,7 @@ export function DeleteDialog({ open, onClose, onConfirm }: DeleteDialogProps) {
                         '&:hover': { backgroundColor: '#dc2626' }
                     }}
                 >
-                    Delete Order
+                    Delete Product
                 </Button>
             </DialogActions>
         </Dialog>

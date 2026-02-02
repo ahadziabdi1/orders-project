@@ -6,24 +6,22 @@ import { supabase } from '@/lib/supabaseClient';
 import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { GridSortModel } from '@mui/x-data-grid';
+
 import ProductForm from '@/app/components/products/forms/ProductForm';
 import ProductsTable from '@/app/components/products/table/ProductTable';
 
 export default function ProductsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
-
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [sortModel, setSortModel] = useState<GridSortModel>([]);
 
-    const { data, isLoading, refetch } = useQuery({
+    const { data, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['products', paginationModel, sortModel],
         queryFn: async () => {
             const from = paginationModel.page * paginationModel.pageSize;
             const to = from + paginationModel.pageSize - 1;
 
-            let query = supabase
-                .from('products')
-                .select('*', { count: 'exact' });
+            let query = supabase.from('products').select('*', { count: 'exact' });
 
             if (sortModel.length > 0) {
                 const { field, sort } = sortModel[0];
@@ -32,10 +30,9 @@ export default function ProductsPage() {
                 query = query.order('created_at', { ascending: false });
             }
 
-            const { data, error, count } = await query.range(from, to);
-
+            const { data: products, error, count } = await query.range(from, to);
             if (error) throw error;
-            return { products: data, total: count || 0 };
+            return { products, total: count || 0 };
         }
     });
 
@@ -82,7 +79,7 @@ export default function ProductsPage() {
                 <ProductsTable
                     rows={data?.products || []}
                     rowCount={data?.total || 0}
-                    loading={isLoading}
+                    loading={isLoading || isRefetching}
                     paginationModel={paginationModel}
                     onPaginationModelChange={setPaginationModel}
                     sortModel={sortModel}

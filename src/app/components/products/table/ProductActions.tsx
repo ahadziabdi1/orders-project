@@ -9,27 +9,63 @@ interface ActionMenuProps {
     anchorEl: HTMLElement | null;
     open: boolean;
     onClose: () => void;
-    onAction: (action: 'view' | 'edit' | 'delete') => void;
-    orderId: string | null;
     onDelete: () => void;
-    router: AppRouterInstance;
+    onView: () => void;
+    onEdit: () => void;
+    orderId: string | null;
 }
 
-export function ActionMenu({ anchorEl, open, onClose, onAction }: ActionMenuProps) {
+export function ActionMenu({
+    anchorEl,
+    open,
+    onClose,
+    onDelete,
+    onView,
+    onEdit,
+    orderId
+}: ActionMenuProps) {
     return (
-        <Menu anchorEl={anchorEl} open={open} onClose={onClose}>
-            <MenuItem onClick={() => { onAction('view'); onClose(); }}>
+        <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={onClose}
+            elevation={0}
+            slotProps={{
+                paper: {
+                    sx: {
+                        borderRadius: '12px',
+                        minWidth: '180px',
+                        mt: 1,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        '& .MuiMenuItem-root': {
+                            px: 2, py: 1.2, fontSize: '0.875rem', fontWeight: 500, gap: 1.5,
+                            '&:hover': { backgroundColor: '#f8fafc' }
+                        },
+                    }
+                }
+            }}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        >
+            <MenuItem onClick={onView}>
                 <Launch sx={{ fontSize: 18, color: '#64748b' }} />
                 <ListItemText primary="View Details" />
             </MenuItem>
-            <MenuItem onClick={() => { onAction('edit'); onClose(); }}>
+
+            <MenuItem onClick={onEdit}>
                 <EditOutlined sx={{ fontSize: 18, color: '#64748b' }} />
-                <ListItemText primary="Edit Product" />
+                <ListItemText primary="Edit Order" />
             </MenuItem>
-            <Divider />
-            <MenuItem onClick={() => { onAction('delete'); onClose(); }} sx={{ color: '#ef4444' }}>
+
+            <Divider sx={{ my: 1, borderColor: '#f1f5f9' }} />
+
+            <MenuItem
+                onClick={onDelete}
+                sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2 !important' } }}
+            >
                 <DeleteOutline sx={{ fontSize: 18 }} />
-                <ListItemText primary="Delete Product" />
+                <ListItemText primary="Delete Order" />
             </MenuItem>
         </Menu>
     );

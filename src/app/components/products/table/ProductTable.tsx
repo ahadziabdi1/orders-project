@@ -2,8 +2,14 @@
 
 import { useState, useMemo } from 'react';
 import { DataGrid, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
-import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
+import {
+    Box, Typography, useMediaQuery, useTheme, Stack, IconButton
+} from '@mui/material';
+import { MoreVert } from '@mui/icons-material';
 import { getProductColumns } from './columns';
+import ProductDetailsModal from '@/app/components/products/ProductDetailsModal';
+
+import { ActionMenu, DeleteDialog } from '@/app/components/products/table/ProductActions';
 
 interface ProductsTableProps {
     rows: any[];
@@ -14,10 +20,14 @@ interface ProductsTableProps {
     sortModel: GridSortModel;
     onSortChange: (model: GridSortModel) => void;
     onRefresh: () => void;
+    onDelete?: (id: string) => void;
 }
 
 export default function ProductsTable(props: ProductsTableProps) {
-    const { rows, loading, rowCount, paginationModel, onPaginationModelChange, sortModel, onSortChange, onRefresh } = props;
+    const {
+        rows, loading, rowCount, paginationModel,
+        onPaginationModelChange, sortModel, onSortChange, onRefresh, onDelete
+    } = props;
 
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -25,10 +35,35 @@ export default function ProductsTable(props: ProductsTableProps) {
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
         setAnchorEl(event.currentTarget);
         setSelectedId(id);
+    };
+
+    const handleMenuClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleAction = (action: 'view' | 'edit' | 'delete') => {
+        if (action === 'delete') {
+            setDeleteDialogOpen(true);
+        } else {
+            setModalMode(action);
+            setModalOpen(true);
+        }
+        handleMenuClose();
+    };
+
+    const handleConfirmDelete = () => {
+        if (selectedId && onDelete) {
+            onDelete(selectedId);
+        }
+        setDeleteDialogOpen(false);
     };
 
     const columns = useMemo(() => getProductColumns(handleMenuOpen), []);
@@ -37,13 +72,33 @@ export default function ProductsTable(props: ProductsTableProps) {
         <Box sx={{ mt: 3 }}>
             {isMobile ? (
                 <Stack spacing={2}>
-                    {rows.length === 0 ? (
-                        <Typography align="center" sx={{ py: 4, color: 'text.secondary' }}>No products found</Typography>
+                    {rows.length === 0 && !loading ? (
+                        <Typography align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                            No products found
+                        </Typography>
                     ) : (
                         rows.map((product) => (
-                            <Box key={product.id} sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                                <Typography fontWeight={700}>{product.name}</Typography>
-                                <Typography variant="body2">${product.unit_price}</Typography>
+                            <Box
+                                key={product.id}
+                                sx={{
+                                    p: 2,
+                                    bgcolor: 'white',
+                                    borderRadius: 2,
+                                    border: '1px solid #e2e8f0',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Box>
+                                    <Typography fontWeight={700}>{product.name}</Typography>
+                                    <Typography variant="body2" color="textSecondary">
+                                        ${Number(product.unit_price).toFixed(2)}
+                                    </Typography>
+                                </Box>
+                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, product.id)}>
+                                    <MoreVert fontSize="small" />
+                                </IconButton>
                             </Box>
                         ))
                     )}
@@ -88,17 +143,40 @@ export default function ProductsTable(props: ProductsTableProps) {
                                 fontWeight: 700,
                                 color: '#475569'
                             },
-                            '& .MuiDataGrid-sortIcon': {
-                                opacity: '1 !important',
-                                color: '#cbd5e1 !important',
-                            },
-                            '& .MuiDataGrid-columnHeader--sorted .MuiDataGrid-sortIcon': {
-                                color: theme.palette.primary.main,
-                            },
+                            '& .MuiDataGrid-cell:focus': {
+                                outline: 'none'
+                            }
                         }}
                     />
                 </Box>
             )}
+
+            <ActionMenu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+                onView={() => handleAction('view')}
+                onEdit={() => handleAction('edit')}
+                orderId={selectedId} 
+                onDelete={() => handleAction('delete')}
+            />
+
+            <DeleteDialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleConfirmDelete}
+            />
+
+            <ProductDetailsModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                productId={selectedId}
+                initialMode={modalMode}
+                onSuccess={() => {
+                    onRefresh();
+                    setModalOpen(false);
+                }}
+            />
         </Box>
     );
 }

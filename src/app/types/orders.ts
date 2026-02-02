@@ -6,6 +6,7 @@ export interface Product {
     id: string;
     name: string;
     unit_price: number;
+    created_at?: string;
 }
 
 export interface Customer {

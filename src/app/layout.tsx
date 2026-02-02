@@ -4,6 +4,7 @@ import "./globals.css";
 import EmotionRegistry from "./registry";
 import ThemeProvider from "./components/ThemeProvider";
 import { Toaster } from "react-hot-toast";
+import Navbar from "./components/Navbar";
 
 import Providers from "./providers";
 
@@ -39,6 +40,7 @@ export default function RootLayout({
                   duration: 5000,
                 }}
               />
+              <Navbar />
               {children}
             </Providers>
           </ThemeProvider>

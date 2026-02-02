@@ -39,17 +39,34 @@ export default function OrdersPage() {
 
             let query = supabase
                 .from('orders')
-                .select('*', { count: 'exact' });
+                .select(`
+                    id,
+                    customer_id,
+                    product_id,
+                    quantity,
+                    total_price,
+                    delivery_address,
+                    status,
+                    created_at,
+                    products (name),
+                    customers (full_name)
+                `, { count: 'exact' });
 
             if (sortModel.length > 0) {
                 const { field, sort } = sortModel[0];
-                query = query.order(field, { ascending: sort === 'asc' });
-            } else {
-                query = query.order('created_at', { ascending: false });
+                const isAsc = sort === 'asc';
+
+                if (field === 'product_name') {
+                    query = query.order('products(name)', { ascending: isAsc });
+                } else if (field === 'customer_name') {
+                    query = query.order('customers(full_name)', { ascending: isAsc });
+                } else {
+                    query = query.order(field, { ascending: isAsc });
+                }
             }
 
             if (searchTerm) {
-                query = query.ilike('customer_name', `%${searchTerm}%`);
+                query = query.ilike('customers.full_name', `%${searchTerm}%`);
             }
 
             if (statusFilter !== 'ALL') {
@@ -61,16 +78,17 @@ export default function OrdersPage() {
             const { data, error, count } = await query;
             if (error) throw error;
 
-            const formatted: Order[] = (data || []).map((o) => ({
+            const formatted: Order[] = (data || []).map((o: any) => ({
                 id: o.id,
-                product_name: o.product_name,
-                customer_name: o.customer_name,
+                customer_id: o.customer_id,
+                product_id: o.product_id,
                 quantity: o.quantity,
-                price_per_unit: o.price_per_unit,
                 delivery_address: o.delivery_address,
                 status: o.status as OrderStatus,
                 created_at: o.created_at,
-                total_amount: o.quantity * o.price_per_unit
+                total_price: o.total_price || 0,
+                product_name: o.products?.name || 'Unknown Product',
+                customer_name: o.customers?.full_name || 'Unknown Customer'
             }));
 
             return {

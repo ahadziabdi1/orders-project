@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { TextField, Button, Box, Typography, MenuItem, SxProps, Theme, CircularProgress } from "@mui/material";
-import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, LocalOfferOutlined, HomeOutlined } from "@mui/icons-material";
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import {
+    TextField, Button, Box, Typography, MenuItem,
+    SxProps, Theme, CircularProgress, Autocomplete
+} from "@mui/material";
+import {
+    PersonOutline, ShoppingBagOutlined, NumbersOutlined,
+    PaidOutlined, LocalOfferOutlined, HomeOutlined
+} from "@mui/icons-material";
 import { toast } from "react-hot-toast";
-import { createOrderAction } from "@/app/actions/orders";
-import { OrderFormData } from "../types/orders";
+import { supabase } from "@/lib/supabaseClient";
+import { OrderFormData, Product, Customer } from "../types/orders";
 
 interface OrderFormProps {
     onClose: () => void;
@@ -23,56 +29,117 @@ const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType<{ sx?: S
 
 export default function OrderForm({ onClose }: OrderFormProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { register, handleSubmit, formState: { errors } } = useForm<OrderFormData>({
+    const [lookupsLoading, setLookupsLoading] = useState(true);
+    const [products, setProducts] = useState<Product[]>([]);
+    const [customers, setCustomers] = useState<Customer[]>([]);
+
+    const { control, register, handleSubmit, watch, setValue, formState: { errors } } = useForm<OrderFormData>({
         defaultValues: {
             quantity: 1,
-            price_per_unit: 0,
+            total_price: 0,
             status: 'CREATED'
         }
     });
 
+    const selectedProductId = watch('product_id');
+    const quantity = watch('quantity');
+
+    useEffect(() => {
+        async function loadData() {
+            const [pRes, cRes] = await Promise.all([
+                supabase.from('products').select('*'),
+                supabase.from('customers').select('*')
+            ]);
+            setProducts(pRes.data || []);
+            setCustomers(cRes.data || []);
+            setLookupsLoading(false);
+        }
+        loadData();
+    }, []);
+
+    useEffect(() => {
+        const product = products.find(p => p.id === selectedProductId);
+        if (product) {
+            setValue('total_price', product.unit_price * (quantity || 0));
+        }
+    }, [selectedProductId, quantity, products, setValue]);
+
     const onSubmit = async (data: OrderFormData) => {
         setIsLoading(true);
         try {
-            const result = await createOrderAction(data);
-            if (result.success) {
-                toast.success(result.message);
+            const { error } = await supabase.from('orders').insert([data]);
+            if (!error) {
+                toast.success("Order created successfully!");
                 onClose();
             } else {
-                toast.error(result.message || "Failed to create order");
+                toast.error(error.message);
             }
         } catch (error) {
             toast.error("An unexpected error occurred");
-            console.log("An unexpected error occurred", error);
         } finally {
             setIsLoading(false);
         }
     };
 
+    if (lookupsLoading) {
+        return (
+            <Box sx={{ p: 4, textAlign: 'center' }}>
+                <CircularProgress size={30} sx={{ color: '#0f172a' }} />
+            </Box>
+        );
+    }
+
     return (
         <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ p: { xs: 1, sm: 2 }, width: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+
                 <Box>
                     <LabelWithIcon icon={PersonOutline} label="Customer Name" />
-                    <TextField
-                        fullWidth
-                        disabled={isLoading}
-                        placeholder="Enter customer name"
-                        {...register("customer_name", { required: "Customer name is required", minLength: 2 })}
-                        error={!!errors.customer_name}
-                        helperText={errors.customer_name?.message}
+                    <Controller
+                        name="customer_id"
+                        control={control}
+                        rules={{ required: "Selecting a customer is required" }}
+                        render={({ field }) => (
+                            <Autocomplete
+                                options={customers}
+                                disabled={isLoading}
+                                getOptionLabel={(option) => option.full_name}
+                                onChange={(_, data) => field.onChange(data?.id)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Search customers..."
+                                        error={!!errors.customer_id}
+                                        helperText={errors.customer_id?.message}
+                                    />
+                                )}
+                            />
+                        )}
                     />
                 </Box>
 
                 <Box>
                     <LabelWithIcon icon={ShoppingBagOutlined} label="Product" />
-                    <TextField
-                        fullWidth
-                        disabled={isLoading}
-                        placeholder="Enter product name"
-                        {...register("product_name", { required: "Product name is required" })}
-                        error={!!errors.product_name}
-                        helperText={errors.product_name?.message}
+                    <Controller
+                        name="product_id"
+                        control={control}
+                        rules={{ required: "Selecting a product is required" }}
+                        render={({ field }) => (
+                            <Autocomplete
+                                options={products}
+                                disabled={isLoading}
+                                getOptionLabel={(option) => `${option.name} ($${option.unit_price})`}
+                                onChange={(_, data) => field.onChange(data?.id)}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        placeholder="Search products..."
+                                        error={!!errors.product_id}
+                                        helperText={errors.product_id?.message}
+                                    />
+                                )}
+                            />
+                        )}
                     />
                 </Box>
 
@@ -83,51 +150,22 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                             fullWidth
                             type="number"
                             disabled={isLoading}
-                            slotProps={{
-                                input: {
-                                    inputProps: {
-                                        min: 1
-                                    }
-                                }
-                            }}
+                            slotProps={{ input: { inputProps: { min: 1 } } }}
                             {...register("quantity", {
                                 required: "Quantity is required",
-                                min: {
-                                    value: 1,
-                                    message: "Quantity must be at least 1"
-                                },
-                                valueAsNumber: true
+                                valueAsNumber: true,
+                                min: 1
                             })}
                             error={!!errors.quantity}
                         />
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                        <LabelWithIcon icon={PaidOutlined} label="Unit Price" />
+                        <LabelWithIcon icon={PaidOutlined} label="Total Price ($)" />
                         <TextField
                             fullWidth
-                            type="number"
-                            disabled={isLoading}
-                            slotProps={{
-                                input: {
-                                    inputProps: {
-                                        step: "0.01",
-                                        min: 0.01
-                                    }
-                                }
-                            }}
-                            {...register("price_per_unit", {
-                                required: "Price is required",
-                                min: {
-                                    value: 0.01,
-                                    message: "Price must be greater than 0"
-                                },
-                                validate: {
-                                    positive: (value) => value > 0 || "Price must be greater than 0"
-                                },
-                                valueAsNumber: true
-                            })}
-                            error={!!errors.price_per_unit}
-                            helperText={errors.price_per_unit?.message}
+                            disabled
+                            value={watch('total_price')?.toFixed(2)}
+                            sx={{ "& .MuiInputBase-input.Mui-disabled": { WebkitTextFillColor: "#0f172a", fontWeight: 700 } }}
                         />
                     </Box>
                 </Box>
@@ -146,7 +184,13 @@ export default function OrderForm({ onClose }: OrderFormProps) {
 
                 <Box>
                     <LabelWithIcon icon={LocalOfferOutlined} label="Status" />
-                    <TextField select fullWidth disabled={isLoading} defaultValue="CREATED" {...register("status")}>
+                    <TextField
+                        select
+                        fullWidth
+                        disabled={isLoading}
+                        defaultValue="CREATED"
+                        {...register("status")}
+                    >
                         <MenuItem value="CREATED">Created</MenuItem>
                         <MenuItem value="PROCESSING">Processing</MenuItem>
                     </TextField>

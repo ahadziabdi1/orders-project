@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, ChangeEvent } from 'react';
-import { DataGrid, GridSortModel } from '@mui/x-data-grid';
+import { useState, useMemo, ChangeEvent, useEffect } from 'react';
+import { DataGrid, GridSortModel, useGridApiRef, GridCellParams } from '@mui/x-data-grid';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -12,6 +12,8 @@ import { TableFilters } from './orders-table/TableFilters';
 import { OrderMobileCard } from './orders-table/OrderMobileCard';
 import { ActionMenu, DeleteDialog } from './orders-table/OrderActions';
 import { deleteOrderAction } from '@/app/actions/orders';
+
+import { supabase } from '@/lib/supabaseClient';
 
 interface OrdersTableProps {
   rows: Order[];
@@ -45,6 +47,7 @@ export default function OrdersTable(props: OrdersTableProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const router = useRouter();
+  const apiRef = useGridApiRef();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -82,6 +85,27 @@ export default function OrdersTable(props: OrdersTableProps) {
   };
 
   const columns = useMemo(() => getColumns(handleMenuOpen), []);
+
+  const processRowUpdate = async (newRow: Order, oldRow: Order) => {
+    if (newRow.status === oldRow.status) return oldRow;
+
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: newRow.status })
+      .eq('id', newRow.id);
+
+    if (error) {
+      toast.error("Failed to update status");
+      return oldRow;
+    }
+
+    toast.success(
+      <span>
+        Status updated to <b>{newRow.status.toLowerCase()}</b>
+      </span>
+    );
+    return newRow;
+  };
 
   return (
     <Box sx={{ mt: 3 }}>
@@ -121,8 +145,18 @@ export default function OrdersTable(props: OrdersTableProps) {
             <Typography variant="body2" color="textSecondary">{rowCount} orders found</Typography>
           </Box>
           <DataGrid
+            apiRef={apiRef}
             rows={rows}
             columns={columns}
+            processRowUpdate={processRowUpdate}
+            onProcessRowUpdateError={(error) => console.log(error)}
+            onCellClick={(params, event) => {
+              if (params.field === 'status' && params.colDef.editable) {
+                if (params.cellMode === 'view') {
+                  apiRef.current.startCellEditMode({ id: params.id, field: params.field });
+                }
+              }
+            }}
             sortingMode="server"
             sortModel={sortModel}
             onSortModelChange={onSortChange}
@@ -139,6 +173,12 @@ export default function OrdersTable(props: OrdersTableProps) {
             sx={{
               border: 'none',
               px: 2,
+              '& .MuiDataGrid-cell--editing': {
+                padding: '0 !important',
+                display: 'flex',
+                alignItems: 'center',
+                backgroundColor: 'transparent !important',
+              },
               '& .MuiDataGrid-cell:focus': { outline: 'none' },
               '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within': {
                 outline: 'none',
@@ -147,21 +187,13 @@ export default function OrdersTable(props: OrdersTableProps) {
                 fontWeight: 700,
                 color: '#475569'
               },
-              '& .MuiDataGrid-iconButtonContainer': {
-                visibility: 'visible', 
-                width: 'auto',
-              },
               '& .MuiDataGrid-sortIcon': {
-                opacity: '1 !important', 
-                color: '#cbd5e1 !important', 
-                fontSize: '1.2rem',
+                opacity: '1 !important',
+                color: '#cbd5e1 !important',
               },
               '& .MuiDataGrid-columnHeader--sorted .MuiDataGrid-sortIcon': {
-                color: theme.palette.primary.main, 
+                color: theme.palette.primary.main,
               },
-              '& .MuiDataGrid-columnHeaderTitleContainer': {
-                justifyContent: 'space-between',
-              }
             }}
           />
         </Box>

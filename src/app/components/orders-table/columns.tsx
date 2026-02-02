@@ -1,8 +1,50 @@
 import React from 'react';
-import { GridColDef } from '@mui/x-data-grid';
-import { Chip, IconButton, Box, Typography } from '@mui/material';
+import { GridColDef, GridRenderEditCellParams, useGridApiContext } from '@mui/x-data-grid';
+import { Chip, IconButton, Box, Typography, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
-import { Order, getStatusColor } from '@/app/types/orders';
+import { Order, getStatusColor, OrderStatus } from '@/app/types/orders';
+
+const STATUS_OPTIONS: OrderStatus[] = ['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'];
+
+const StatusEditCell = (params: GridRenderEditCellParams) => {
+    const { id, value, field } = params;
+    const apiRef = useGridApiContext();
+
+    const handleChange = async (event: SelectChangeEvent) => {
+        await apiRef.current.setEditCellValue({ id, field, value: event.target.value });
+        apiRef.current.stopCellEditMode({ id, field });
+    };
+
+    return (
+        <Select
+            value={value}
+            onChange={handleChange}
+            size="small"
+            fullWidth
+            autoFocus
+            open={true}
+            sx={{
+                height: '100%',
+                '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+                '& .MuiSelect-select': {
+                    py: 0,
+                    fontWeight: 700,
+                    fontSize: '0.75rem'
+                }
+            }}
+        >
+            {STATUS_OPTIONS.map((option) => (
+                <MenuItem
+                    key={option}
+                    value={option}
+                    sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+                >
+                    {option}
+                </MenuItem>
+            ))}
+        </Select>
+    );
+};
 
 export const getColumns = (
     handleMenuOpen: (e: React.MouseEvent<HTMLElement>, id: string) => void
@@ -27,6 +69,7 @@ export const getColumns = (
             field: 'product_name',
             headerName: 'Product',
             minWidth: 220,
+            sortable: true,
             filterable: false,
             hideable: false,
         },
@@ -34,6 +77,7 @@ export const getColumns = (
             field: 'customer_name',
             headerName: 'Customer',
             minWidth: 180,
+            sortable: true,
             filterable: false,
             hideable: false,
         },
@@ -43,16 +87,15 @@ export const getColumns = (
             minWidth: 180,
             filterable: false,
             hideable: false,
-            valueFormatter: (value) => value ?? 'N/A',
+            valueFormatter: (value) => value ?? '-',
         },
         {
             field: 'status',
             headerName: 'Status',
-            width: 130,
-            resizable: false,
-            sortable: false,
-            filterable: false,
-            hideable: false,
+            width: 150,
+            editable: true,
+            type: 'singleSelect',
+            valueOptions: STATUS_OPTIONS,
             renderCell: (params) => {
                 const style = getStatusColor(params.value);
                 return (
@@ -67,10 +110,12 @@ export const getColumns = (
                             color: style.text,
                             border: `1px solid ${style.border}`,
                             borderRadius: '6px',
+                            cursor: 'pointer'
                         }}
                     />
                 );
-            }
+            },
+            renderEditCell: (params) => <StatusEditCell {...params} />,
         },
         {
             field: 'created_at',
@@ -90,17 +135,18 @@ export const getColumns = (
             },
         },
         {
-            field: 'total_amount',
+            field: 'total_price',
             headerName: 'Amount',
             width: 110,
             align: 'right',
             sortable: false,
             filterable: false,
             hideable: false,
+            valueFormatter: (value) => `$${Number(value).toFixed(2)}`,
             renderCell: (params) => (
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '100%', width: '100%' }}>
                     <Typography sx={{ fontWeight: 700 }}>
-                        ${params.value.toFixed(2)}
+                        ${Number(params.value).toFixed(2)}
                     </Typography>
                 </Box>
             ),

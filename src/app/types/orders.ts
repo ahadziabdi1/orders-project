@@ -2,19 +2,33 @@ import React from 'react';
 
 export type OrderStatus = 'CREATED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELED';
 
+export interface Product {
+    id: string;
+    name: string;
+    unit_price: number;
+}
+
+export interface Customer {
+    id: string;
+    full_name: string;
+    email: string;
+    delivery_address: string;
+}
+
 export interface OrderFormData {
-    product_name: string;
-    customer_name: string;
+    customer_id: string; 
+    product_id: string;  
     quantity: number;
-    price_per_unit: number;
-    delivery_address: string | null;
+    total_price: number;
+    delivery_address: string;
     status: OrderStatus;
 }
 
 export interface Order extends OrderFormData {
     id: string;
     created_at: string;
-    total_amount: number;
+    customers?: { full_name: string };
+    products?: { name: string; unit_price: number };
 }
 
 export interface ActionResponse<T = undefined> {

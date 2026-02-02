@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useMemo, ChangeEvent, useEffect } from 'react';
-import { DataGrid, GridSortModel, useGridApiRef, GridCellParams } from '@mui/x-data-grid';
+import { useState, useMemo, ChangeEvent } from 'react';
+import { DataGrid, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
 import { Order } from '@/app/types/orders';
-import { getColumns } from './orders-table/columns';
-import { TableFilters } from './orders-table/TableFilters';
-import { OrderMobileCard } from './orders-table/OrderMobileCard';
-import { ActionMenu, DeleteDialog } from './orders-table/OrderActions';
+import { getColumns } from '@/app/components/orders/table/columns';
+import { TableFilters } from '@/app/components/orders/table/TableFilters';
+import { OrderMobileCard } from '@/app/components/orders/table/OrderMobileCard';
+import { ActionMenu, DeleteDialog } from '@/app/components/orders/table/OrderActions';
 import { deleteOrderAction } from '@/app/actions/orders';
+import OrderDetailsModal from '@/app/components/orders/OrderDetailsModal';
 
 import { supabase } from '@/lib/supabaseClient';
 
@@ -46,12 +46,14 @@ export default function OrdersTable(props: OrdersTableProps) {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const router = useRouter();
   const apiRef = useGridApiRef();
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
     setAnchorEl(event.currentTarget);
@@ -60,6 +62,12 @@ export default function OrdersTable(props: OrdersTableProps) {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleOpenDetails = (mode: 'view' | 'edit') => {
+    setModalMode(mode);
+    setDetailsModalOpen(true);
+    handleMenuClose();
   };
 
   const handleDeleteConfirm = async () => {
@@ -99,11 +107,7 @@ export default function OrdersTable(props: OrdersTableProps) {
       return oldRow;
     }
 
-    toast.success(
-      <span>
-        Status updated to <b>{newRow.status.toLowerCase()}</b>
-      </span>
-    );
+    toast.success("Order status updated.");
     return newRow;
   };
 
@@ -150,7 +154,7 @@ export default function OrdersTable(props: OrdersTableProps) {
             columns={columns}
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={(error) => console.log(error)}
-            onCellClick={(params, event) => {
+            onCellClick={(params) => {
               if (params.field === 'status' && params.colDef.editable) {
                 if (params.cellMode === 'view') {
                   apiRef.current.startCellEditMode({ id: params.id, field: params.field });
@@ -204,8 +208,17 @@ export default function OrdersTable(props: OrdersTableProps) {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
         orderId={selectedOrderId}
+        onView={() => handleOpenDetails('view')}
+        onEdit={() => handleOpenDetails('edit')}
         onDelete={() => { setDeleteDialogOpen(true); handleMenuClose(); }}
-        router={router}
+      />
+
+      <OrderDetailsModal
+        open={detailsModalOpen}
+        onClose={() => setDetailsModalOpen(false)}
+        orderId={selectedOrderId}
+        initialMode={modalMode}
+        onSuccess={onRefresh}
       />
 
       <DeleteDialog

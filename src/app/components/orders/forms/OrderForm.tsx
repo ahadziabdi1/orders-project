@@ -12,7 +12,7 @@ import {
 } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { supabase } from "@/lib/supabaseClient";
-import { OrderFormData, Product, Customer } from "../types/orders";
+import { OrderFormData, Product, Customer } from "@/app/types/orders";
 
 interface OrderFormProps {
     onClose: () => void;

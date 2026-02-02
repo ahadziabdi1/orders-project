@@ -6,8 +6,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { GridSortModel } from '@mui/x-data-grid';
-import ProductForm from '@/app/components/ProductForm';
-import ProductsTable from '@/app/components/ProductTable';
+import ProductForm from '@/app/components/products/forms/ProductForm';
+import ProductsTable from '@/app/components/products/table/ProductTable';
 
 export default function ProductsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,7 +60,20 @@ export default function ProductsPage() {
                         variant="contained"
                         startIcon={<AddIcon />}
                         onClick={() => setIsModalOpen(true)}
-                        sx={{ backgroundColor: '#0f172a', textTransform: 'none', fontWeight: 600, px: 3 }}
+                        sx={{
+                            backgroundColor: '#0f172a',
+                            color: '#fff',
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            px: 3,
+                            py: 1,
+                            width: { xs: '100%', sm: 'auto' },
+                            '&:hover': {
+                                backgroundColor: '#1e293b',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                            }
+                        }}
                     >
                         Add New Product
                     </Button>

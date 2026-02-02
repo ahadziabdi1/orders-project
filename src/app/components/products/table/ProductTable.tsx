@@ -3,11 +3,7 @@
 import { useState, useMemo } from 'react';
 import { DataGrid, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
-import { toast } from 'react-hot-toast';
-import { supabase } from '@/lib/supabaseClient';
-
-// Import your custom columns and components (similar to your orders setup)
-import { getProductColumns } from './products-table/columns';
+import { getProductColumns } from './columns';
 
 interface ProductsTableProps {
     rows: any[];
@@ -72,18 +68,33 @@ export default function ProductsTable(props: ProductsTableProps) {
                         sortingMode="server"
                         sortModel={sortModel}
                         onSortModelChange={onSortChange}
+                        disableColumnMenu
+                        disableColumnFilter
+                        disableColumnSelector
+                        disableRowSelectionOnClick
                         paginationMode="server"
                         rowCount={rowCount}
                         loading={loading}
                         paginationModel={paginationModel}
                         onPaginationModelChange={onPaginationModelChange}
                         pageSizeOptions={[10, 20, 50]}
-                        disableRowSelectionOnClick
                         sx={{
                             border: 'none',
                             px: 2,
-                            '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700, color: '#475569' },
-                            '& .MuiDataGrid-cell:focus': { outline: 'none' },
+                            '& .MuiDataGrid-columnHeader:focus, & .MuiDataGrid-columnHeader:focus-within': {
+                                outline: 'none',
+                            },
+                            '& .MuiDataGrid-columnHeaderTitle': {
+                                fontWeight: 700,
+                                color: '#475569'
+                            },
+                            '& .MuiDataGrid-sortIcon': {
+                                opacity: '1 !important',
+                                color: '#cbd5e1 !important',
+                            },
+                            '& .MuiDataGrid-columnHeader--sorted .MuiDataGrid-sortIcon': {
+                                color: theme.palette.primary.main,
+                            },
                         }}
                     />
                 </Box>

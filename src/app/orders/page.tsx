@@ -13,8 +13,8 @@ import {
     DialogContent,
     IconButton
 } from '@mui/material';
-import OrdersTable from '@/app/components/OrderTable';
-import OrderForm from '@/app/components/OrderForm';
+import OrdersTable from '@/app/components/orders/table/OrderTable';
+import OrderForm from '@/app/components/orders/forms/OrderForm';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { GridSortModel } from '@mui/x-data-grid';
 

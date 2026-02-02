@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import EmotionRegistry from "./registry";
-import ThemeProvider from "./components/ThemeProvider";
+import ThemeProvider from "@/app/components/common/ThemeProvider";
 import { Toaster } from "react-hot-toast";
-import Navbar from "./components/Navbar";
+import Navbar from "@/app/components/common/Navbar";
 
 import Providers from "./providers";
 

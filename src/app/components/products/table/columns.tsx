@@ -39,10 +39,7 @@ export const getProductColumns = (onMenuOpen: (event: React.MouseEvent<HTMLEleme
         filterable: false,
         hideable: false,
         renderCell: (params) => (
-            <IconButton
-                size="small"
-            // onClick={(e) => handleMenuOpen(e, params.row.id)}
-            >
+            <IconButton size="small" onClick={(e) => onMenuOpen(e, params.row.id)}>
                 <MoreVert fontSize="small" />
             </IconButton>
         ),

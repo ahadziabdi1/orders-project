@@ -9,22 +9,37 @@ interface OrderMobileCardProps {
 
 export const OrderMobileCard = ({ order, onMenuOpen }: OrderMobileCardProps) => {
     const style = getStatusColor(order.status);
-    const total = order.total_amount || (order.quantity * order.price_per_unit);
+    const total = order.total_price || 0;
 
     return (
         <Card sx={{ borderRadius: '12px', border: '1px solid #e2e8f0', mb: 2 }}>
             <CardContent sx={{ p: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                    <Typography sx={{ fontWeight: 800 }}>#{order.id.substring(0, 7).toUpperCase()}</Typography>
+                    <Typography sx={{ fontWeight: 800 }}>
+                        #{order.id.substring(0, 7).toUpperCase()}
+                    </Typography>
                     <IconButton size="small" onClick={(e) => onMenuOpen(e, order.id)}>
                         <MoreVert fontSize="small" />
                     </IconButton>
                 </Box>
-                <Typography sx={{ fontWeight: 700 }}>{order.customer_name}</Typography>
-                <Typography variant="body2" color="textSecondary">{order.product_name}</Typography>
+
+                <Typography sx={{ fontWeight: 700 }}>
+                    {order.customer_name || 'Unknown Customer'}
+                </Typography>
+
+                <Typography variant="body2" color="textSecondary">
+                    {order.product_name || 'Unknown Product'}
+                </Typography>
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-                    <Chip label={order.status} size="small" sx={{ bgcolor: style.bg, color: style.text }} />
-                    <Typography sx={{ fontWeight: 800 }}>${total.toFixed(2)}</Typography>
+                    <Chip
+                        label={order.status}
+                        size="small"
+                        sx={{ bgcolor: style.bg, color: style.text }}
+                    />
+                    <Typography sx={{ fontWeight: 800 }}>
+                        ${total.toFixed(2)}
+                    </Typography>
                 </Box>
             </CardContent>
         </Card>

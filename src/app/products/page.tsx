@@ -3,78 +3,90 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabaseClient';
-import { 
-    Container, Typography, Box, Button, Dialog, 
-    DialogTitle, DialogContent, IconButton 
-} from '@mui/material';
+import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
-import ProductForm from '@/app/components/ProductForm'
+import { GridSortModel } from '@mui/x-data-grid';
+import ProductForm from '@/app/components/ProductForm';
+import ProductsTable from '@/app/components/ProductTable';
 
 export default function ProductsPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const { data: products, isLoading, refetch } = useQuery({
-        queryKey: ['products'],
+    const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+    const [sortModel, setSortModel] = useState<GridSortModel>([]);
+
+    const { data, isLoading, refetch } = useQuery({
+        queryKey: ['products', paginationModel, sortModel],
         queryFn: async () => {
-            const { data, error } = await supabase
+            const from = paginationModel.page * paginationModel.pageSize;
+            const to = from + paginationModel.pageSize - 1;
+
+            let query = supabase
                 .from('products')
-                .select('*')
-                .order('name', { ascending: true });
+                .select('*', { count: 'exact' });
+
+            if (sortModel.length > 0) {
+                const { field, sort } = sortModel[0];
+                query = query.order(field, { ascending: sort === 'asc' });
+            } else {
+                query = query.order('created_at', { ascending: false });
+            }
+
+            const { data, error, count } = await query.range(from, to);
+
             if (error) throw error;
-            return data;
+            return { products: data, total: count || 0 };
         }
     });
 
-    const columns: GridColDef[] = [
-        { field: 'name', headerName: 'Naziv Artikla', flex: 1 },
-        { 
-            field: 'unit_price', 
-            headerName: 'Cijena po komadu', 
-            width: 200,
-            valueFormatter: (value) => `${Number(value).toFixed(2)} KM`
-        },
-        { field: 'created_at', headerName: 'Datum dodavanja', width: 200, 
-          valueGetter: (value) => new Date(value).toLocaleDateString() 
-        },
-    ];
-
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 800 }}>Šifarnik Artikala</Typography>
-                    <Typography color="textSecondary">Upravljajte listom proizvoda u sistemu.</Typography>
+        <Box sx={{ minHeight: '100vh', py: { xs: 3, md: 6 }, backgroundColor: '#fdfdfd' }}>
+            <Container maxWidth="lg">
+                <Box sx={{
+                    mb: 4,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    gap: 2
+                }}>
+                    <Box>
+                        <Typography variant="h4" sx={{ fontWeight: 800 }}>Product Catalog</Typography>
+                        <Typography variant="body1" color="textSecondary">
+                            Manage your system's product list and pricing.
+                        </Typography>
+                    </Box>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setIsModalOpen(true)}
+                        sx={{ backgroundColor: '#0f172a', textTransform: 'none', fontWeight: 600, px: 3 }}
+                    >
+                        Add New Product
+                    </Button>
                 </Box>
-                <Button 
-                    variant="contained" 
-                    startIcon={<AddIcon />} 
-                    onClick={() => setIsModalOpen(true)}
-                    sx={{ backgroundColor: '#0f172a', borderRadius: 2, textTransform: 'none' }}
-                >
-                    Dodaj Novi Artikal
-                </Button>
-            </Box>
 
-            <Box sx={{ height: 600, backgroundColor: 'white', borderRadius: 2, border: '1px solid #e2e8f0' }}>
-                <DataGrid
-                    rows={products || []}
-                    columns={columns}
+                <ProductsTable
+                    rows={data?.products || []}
+                    rowCount={data?.total || 0}
                     loading={isLoading}
-                    disableRowSelectionOnClick
-                    sx={{ border: 'none' }}
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
+                    sortModel={sortModel}
+                    onSortChange={setSortModel}
+                    onRefresh={refetch}
                 />
-            </Box>
 
-            <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="xs">
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2 }}>
-                    <DialogTitle sx={{ fontWeight: 800 }}>Novi Artikal</DialogTitle>
-                    <IconButton onClick={() => setIsModalOpen(false)}><CloseIcon /></IconButton>
-                </Box>
-                <DialogContent>
-                    <ProductForm onClose={() => { setIsModalOpen(false); refetch(); }} />
-                </DialogContent>
-            </Dialog>
-        </Container>
+                <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="sm">
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2, pt: 1 }}>
+                        <DialogTitle sx={{ fontWeight: 800 }}>New Product</DialogTitle>
+                        <IconButton onClick={() => setIsModalOpen(false)} size="small"><CloseIcon /></IconButton>
+                    </Box>
+                    <DialogContent sx={{ pt: 0 }}>
+                        <ProductForm onClose={() => { setIsModalOpen(false); refetch(); }} />
+                    </DialogContent>
+                </Dialog>
+            </Container>
+        </Box>
     );
 }

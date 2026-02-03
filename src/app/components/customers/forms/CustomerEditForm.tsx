@@ -11,7 +11,7 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
 
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
-            name: customer.full_name,
+            full_name: customer.full_name,
             email: customer.email,
             delivery_address: customer.delivery_address || '',
         }
@@ -20,7 +20,14 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
     const onSubmit = async (data: any) => {
         setLoading(true);
         try {
-            const result = await updateCustomerAction(customer.id, data);
+
+            const payload = {
+                full_name: data.full_name,
+                email: data.email,
+                delivery_address: data.delivery_address
+            };
+
+            const result = await updateCustomerAction(customer.id, payload);
             if (result.success) {
                 toast.success("Customer updated successfully");
                 onSuccess();
@@ -40,12 +47,12 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
                 <TextField
                     label="Full Name"
                     fullWidth
-                    {...register("name", {
+                    {...register("full_name", {
                         required: "Name is required",
                         minLength: { value: 2, message: "Name must be at least 2 characters" }
                     })}
-                    error={!!errors.name}
-                    helperText={errors.name?.message as string}
+                    error={!!errors.full_name}
+                    helperText={errors.full_name?.message as string}
                 />
 
                 <TextField
@@ -79,7 +86,7 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
             </Box>
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column-reverse', sm: 'row' }, justifyContent: 'flex-end', gap: 1.5, mt: 1 }}>
-            <Button
+                <Button
                     onClick={onCancel}
                     disabled={loading}
                     sx={{ color: '#374151', textTransform: 'none', fontWeight: 600 }}

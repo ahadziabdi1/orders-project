@@ -63,7 +63,7 @@ export default function OrderDetailsModal({ open, onClose, orderId, initialMode,
     const statusStyle = order ? getStatusColor(order.status) : { bg: '#eee', text: '#333', border: '#ccc' };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="body" PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="body" slotProps={{ paper: { sx: { borderRadius: '16px' } } }}>
             <IconButton onClick={onClose} sx={{ position: 'absolute', right: 16, top: 16, color: '#64748b', zIndex: 10 }}>
                 <Close />
             </IconButton>
@@ -73,7 +73,6 @@ export default function OrderDetailsModal({ open, onClose, orderId, initialMode,
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress sx={{ color: '#0f172a' }} /></Box>
                 ) : (
                     <Box>
-                        {/* Header Shared by both modes */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, pr: 4 }}>
                             <Box>
                                 <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a' }}>

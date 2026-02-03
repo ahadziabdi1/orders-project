@@ -87,16 +87,26 @@ export default function CustomersPage() {
                     onRefresh={refetch}
                 />
 
-                <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="sm">
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2, pt: 1 }}>
-                        <DialogTitle sx={{ fontWeight: 800 }}>New Customer</DialogTitle>
-                        <IconButton onClick={() => setIsModalOpen(false)} size="small"><CloseIcon /></IconButton>
-                    </Box>
-                    <DialogContent sx={{ pt: 0 }}>
-                        <CustomerForm onClose={() => { setIsModalOpen(false); refetch(); }} />
-                    </DialogContent>
-                </Dialog>
-            </Container>
-        </Box>
+                <Dialog
+                    open={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    fullWidth
+                    maxWidth="sm"
+                    slotProps={{
+                        paper: {
+                            sx: { borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)', }
+                        }
+                    }}
+                >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2, pt: 1 }}>
+                    <DialogTitle sx={{ fontWeight: 800 }}>New Customer</DialogTitle>
+                    <IconButton onClick={() => setIsModalOpen(false)} size="small"><CloseIcon /></IconButton>
+                </Box>
+                <DialogContent sx={{ pt: 0 }}>
+                    <CustomerForm onClose={() => { setIsModalOpen(false); refetch(); }} />
+                </DialogContent>
+            </Dialog>
+        </Container>
+        </Box >
     );
 }

@@ -49,7 +49,7 @@ export default function ProductDetailsModal({ open, onClose, productId, initialM
     }, [open, productId, initialMode, fetchProduct]);
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" slotProps={{ paper: { sx: { borderRadius: '16px' } } }}>
             <IconButton onClick={onClose} sx={{ position: 'absolute', right: 16, top: 16, color: '#64748b', zIndex: 1 }}>
                 <Close />
             </IconButton>

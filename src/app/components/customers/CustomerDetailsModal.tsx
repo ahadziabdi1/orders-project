@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Dialog, DialogContent, IconButton, CircularProgress, Box, Typography } from '@mui/material';
+import { Dialog, DialogContent, IconButton, CircularProgress, Box, Typography, Divider } from '@mui/material';
 import { Close } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import CustomerView from '@/app/components/customers/CustomerView';
@@ -39,23 +39,36 @@ export default function CustomerDetailsModal({ open, onClose, customerId, initia
     }, [open, customerId, initialMode, fetchCustomer]);
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <IconButton onClick={onClose} sx={{ position: 'absolute', right: 16, top: 16, color: '#64748b' }}>
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="body" slotProps={{ paper: { sx: { borderRadius: '16px' } } }}>
+            <IconButton onClick={onClose} sx={{ position: 'absolute', right: 16, top: 16, color: '#64748b', zIndex: 10 }}>
                 <Close />
             </IconButton>
-            <DialogContent sx={{ p: 5 }}>
+
+            <DialogContent sx={{ p: { xs: 3, md: 5 } }}>
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}><CircularProgress /></Box>
                 ) : customer ? (
-                    mode === 'edit' ? (
-                        <CustomerEditForm
-                            customer={customer}
-                            onCancel={() => setMode('view')}
-                            onSuccess={() => { fetchCustomer(); setMode('view'); onRefresh(); }}
-                        />
-                    ) : (
-                        <CustomerView customer={customer} onEdit={() => setMode('edit')} onClose={onClose} />
-                    )
+                    <Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3, pr: 4 }}>
+                            <Box>
+                                <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a' }}>
+                                    {mode === 'edit' ? "Edit Customer" : customer.full_name}
+                                </Typography>
+                            </Box>
+                        </Box>
+
+                        <Divider sx={{ mb: 4 }} />
+
+                        {mode === 'edit' ? (
+                            <CustomerEditForm
+                                customer={customer}
+                                onCancel={() => setMode('view')}
+                                onSuccess={() => { fetchCustomer(); setMode('view'); onRefresh(); }}
+                            />
+                        ) : (
+                            <CustomerView customer={customer} onEdit={() => setMode('edit')} onClose={onClose} />
+                        )}
+                    </Box>
                 ) : <Typography>No customer found.</Typography>}
             </DialogContent>
         </Dialog>

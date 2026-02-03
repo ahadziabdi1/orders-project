@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import {
-    TextField, Button, Box, Typography, MenuItem,
-    SxProps, Theme, CircularProgress, Autocomplete
-} from "@mui/material";
+import { TextField, Button, Box, MenuItem, CircularProgress, Autocomplete } from "@mui/material";
 import {
     PersonOutline, ShoppingBagOutlined, NumbersOutlined,
     PaidOutlined, LocalOfferOutlined, HomeOutlined

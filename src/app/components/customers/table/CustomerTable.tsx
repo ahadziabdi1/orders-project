@@ -8,9 +8,10 @@ import {
 import { MoreVert } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 
-import { getCustomerColumns } from './columns';
+import { getCustomerColumns } from '@/app/components/customers/table/columns';
 import { deleteCustomerAction } from '@/app/actions/customers';
 import { ActionMenu, DeleteDialog } from '@/app/components/customers/table/CustomerActions';
+import CustomerDetailsModal from '@/app/components/customers/CustomerDetailsModal';
 
 interface CustomersTableProps {
     rows: any[];
@@ -37,6 +38,9 @@ export default function CustomersTable(props: CustomersTableProps) {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
+
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
         setAnchorEl(event.currentTarget);
         setSelectedId(id);
@@ -51,8 +55,8 @@ export default function CustomersTable(props: CustomersTableProps) {
         if (action === 'delete') {
             setDeleteDialogOpen(true);
         } else {
-            // Implement Navigation or Modal logic for View/Edit here
-            // toast.success(`${action} clicked for customer ${selectedId}`);
+            setModalMode(action);
+            setModalOpen(true);
         }
     };
 
@@ -143,6 +147,15 @@ export default function CustomersTable(props: CustomersTableProps) {
                 onView={() => handleAction('view')}
                 onEdit={() => handleAction('edit')}
                 onDelete={() => handleAction('delete')}
+                customerId={selectedId} 
+            />
+
+            <CustomerDetailsModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                customerId={selectedId}
+                initialMode={modalMode}
+                onRefresh={onRefresh}
             />
 
             <DeleteDialog

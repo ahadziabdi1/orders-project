@@ -8,7 +8,7 @@ import {
 import { MoreVert } from '@mui/icons-material';
 import { toast } from 'react-hot-toast';
 
-import { getProductColumns } from './columns';
+import { getProductColumns } from '@/app/components/products/table/columns';
 import ProductDetailsModal from '@/app/components/products/ProductDetailsModal';
 import { ActionMenu, DeleteDialog } from '@/app/components/products/table/ProductActions';
 import { deleteProductAction } from '@/app/actions/products';

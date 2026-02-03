@@ -6,8 +6,8 @@ import { Dialog, DialogContent, IconButton, CircularProgress, Box, Typography } 
 import { Close } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 
-import ProductView from './ProductView';
-import ProductEditForm from './forms/ProductEditForm';
+import ProductView from '@/app/components/products/ProductView';
+import ProductEditForm from '@/app/components/products/forms/ProductEditForm';
 
 interface ProductDetailsModalProps {
     open: boolean;

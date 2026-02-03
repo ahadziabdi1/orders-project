@@ -11,10 +11,17 @@ interface ActionMenuProps {
     onDelete: () => void;
     onView: () => void;
     onEdit: () => void;
-    customerId: string | null; 
+    customerId: string | null;
 }
 
-export function ActionMenu({ anchorEl, open, onClose, onDelete, onView, onEdit }: any) {
+export function ActionMenu({
+    anchorEl,
+    open,
+    onClose,
+    onDelete,
+    onView,
+    onEdit
+}: ActionMenuProps) { 
     return (
         <Menu
             anchorEl={anchorEl}
@@ -24,28 +31,61 @@ export function ActionMenu({ anchorEl, open, onClose, onDelete, onView, onEdit }
             slotProps={{
                 paper: {
                     sx: {
-                        borderRadius: '12px', minWidth: '180px', mt: 1, border: '1px solid #e2e8f0',
+                        borderRadius: '12px',
+                        minWidth: '180px',
+                        mt: 1,
+                        border: '1px solid #e2e8f0',
                         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                        '& .MuiMenuItem-root': { px: 2, py: 1.2, fontSize: '0.875rem', fontWeight: 500, gap: 1.5, '&:hover': { backgroundColor: '#f8fafc' } }
+                        '& .MuiMenuItem-root': {
+                            px: 2,
+                            py: 1.2,
+                            fontSize: '0.875rem',
+                            fontWeight: 500,
+                            gap: 1.5,
+                            '&:hover': { backgroundColor: '#f8fafc' }
+                        }
                     }
                 }
             }}
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
-            <MenuItem onClick={onView}><Launch sx={{ fontSize: 18, color: '#64748b' }} /><ListItemText primary="View Profile" /></MenuItem>
-            <MenuItem onClick={onEdit}><EditOutlined sx={{ fontSize: 18, color: '#64748b' }} /><ListItemText primary="Edit Customer" /></MenuItem>
+            <MenuItem onClick={onView}>
+                <Launch sx={{ fontSize: 18, color: '#64748b' }} />
+                <ListItemText primary="View Profile" />
+            </MenuItem>
+
+            <MenuItem onClick={onEdit}>
+                <EditOutlined sx={{ fontSize: 18, color: '#64748b' }} />
+                <ListItemText primary="Edit Customer" />
+            </MenuItem>
+
             <Divider sx={{ my: 1, borderColor: '#f1f5f9' }} />
-            <MenuItem onClick={onDelete} sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2 !important' } }}>
-                <DeleteOutline sx={{ fontSize: 18 }} /><ListItemText primary="Delete Customer" />
+
+            <MenuItem
+                onClick={onDelete}
+                sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2 !important' } }}
+            >
+                <DeleteOutline sx={{ fontSize: 18 }} />
+                <ListItemText primary="Delete Customer" />
             </MenuItem>
         </Menu>
     );
 }
 
-export function DeleteDialog({ open, onClose, onConfirm }: { open: boolean, onClose: () => void, onConfirm: () => void }) {
+interface DeleteDialogProps {
+    open: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+}
+
+export function DeleteDialog({ open, onClose, onConfirm }: DeleteDialogProps) {
     return (
-        <Dialog open={open} onClose={onClose} slotProps={{ paper: { sx: { borderRadius: '12px', p: 1, maxWidth: '400px' } } }}>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            slotProps={{ paper: { sx: { borderRadius: '12px', p: 1, maxWidth: '400px' } } }}
+        >
             <DialogTitle sx={{ fontWeight: 800, pt: 3, pb: 1 }}>Delete Customer</DialogTitle>
             <DialogContent>
                 <Typography sx={{ color: '#64748b' }}>
@@ -53,8 +93,24 @@ export function DeleteDialog({ open, onClose, onConfirm }: { open: boolean, onCl
                 </Typography>
             </DialogContent>
             <DialogActions sx={{ p: 3, gap: 1 }}>
-                <Button onClick={onClose} sx={{ color: '#64748b', textTransform: 'none', fontWeight: 600 }}>Cancel</Button>
-                <Button onClick={onConfirm} variant="contained" sx={{ backgroundColor: '#ef4444', borderRadius: '8px', textTransform: 'none', fontWeight: 600, px: 3, '&:hover': { backgroundColor: '#dc2626' } }}>
+                <Button
+                    onClick={onClose}
+                    sx={{ color: '#64748b', textTransform: 'none', fontWeight: 600 }}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    onClick={onConfirm}
+                    variant="contained"
+                    sx={{
+                        backgroundColor: '#ef4444',
+                        borderRadius: '8px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        px: 3,
+                        '&:hover': { backgroundColor: '#dc2626' }
+                    }}
+                >
                     Delete Customer
                 </Button>
             </DialogActions>

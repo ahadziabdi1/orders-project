@@ -19,7 +19,10 @@ export interface Customer {
     full_name: string;
     email: string;
     delivery_address: string;
+    created_at?: string;
 }
+
+export type CustomerFormData = Omit<Customer, "id" | "created_at">;
 
 export interface OrderFormData {
     customer_id: string;

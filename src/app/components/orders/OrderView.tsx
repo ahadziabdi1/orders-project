@@ -1,6 +1,6 @@
 import { Box, Typography, Button } from '@mui/material';
 import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, HomeOutlined } from "@mui/icons-material";
-import { Order, DetailBlockProps } from '@/app/types/types';
+import { Order } from '@/app/types/types';
 import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 const DetailBlock = ({ icon, label, value, isHighlight = false }: any) => (

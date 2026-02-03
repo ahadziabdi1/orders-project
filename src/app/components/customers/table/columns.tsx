@@ -2,10 +2,10 @@ import { GridColDef } from '@mui/x-data-grid';
 import { Typography, IconButton, Box } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
 
-export const getProductColumns = (onMenuOpen: (event: React.MouseEvent<HTMLElement>, id: string) => void): GridColDef[] => [
+export const getCustomerColumns = (onMenuOpen: (event: React.MouseEvent<HTMLElement>, id: string) => void): GridColDef[] => [
     {
-        field: 'name',
-        headerName: 'Product Name',
+        field: 'full_name',
+        headerName: 'Customer Name',
         flex: 1,
         sortable: true,
         filterable: false,
@@ -19,14 +19,20 @@ export const getProductColumns = (onMenuOpen: (event: React.MouseEvent<HTMLEleme
         )
     },
     {
-        field: 'unit_price',
-        headerName: 'Price',
-        width: 110,
-        align: 'right',
-        sortable: false,
+        field: 'email',
+        headerName: 'Email',
+        width: 250,
+        sortable: true,
         filterable: false,
         hideable: false,
-        valueFormatter: (value) => `$${Number(value).toFixed(2)}`
+    },
+    {
+        field: 'delivery_address',
+        headerName: 'Delivery Address',
+        sortable: true,
+        filterable: false,
+        hideable: false,
+        width: 300,
     },
     {
         field: 'actions',

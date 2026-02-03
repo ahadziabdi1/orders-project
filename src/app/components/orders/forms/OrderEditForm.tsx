@@ -5,13 +5,7 @@ import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, Home
 import { toast } from 'react-hot-toast';
 import { updateOrderAction } from '@/app/actions/orders';
 import { Order, OrderFormData, OrderStatus, Product, Customer } from '@/app/types/types';
-
-const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 18, color: 'text.secondary' }} />
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#374151' }}>{label}</Typography>
-    </Box>
-);
+import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 interface Props {
     order: Order;

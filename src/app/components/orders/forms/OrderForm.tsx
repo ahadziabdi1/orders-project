@@ -14,19 +14,11 @@ import { toast } from "react-hot-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { createOrderAction } from "@/app/actions/orders";
 import { OrderFormData, Product, Customer } from "@/app/types/types";
+import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 interface OrderFormProps {
     onClose: () => void;
 }
-
-const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType<{ sx?: SxProps<Theme> }>, label: string }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 18, color: 'text.secondary' }} />
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#374151' }}>
-            {label}
-        </Typography>
-    </Box>
-);
 
 export default function OrderForm({ onClose }: OrderFormProps) {
     const [isLoading, setIsLoading] = useState(false);

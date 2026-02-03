@@ -15,21 +15,7 @@ import { Inventory2Outlined, AttachMoneyOutlined } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
 import { createProductAction } from "@/app/actions/products";
 import { ProductFormData } from "@/app/types/types";
-
-const LabelWithIcon = ({
-    icon: Icon,
-    label,
-}: {
-    icon: React.ElementType<{ sx?: SxProps<Theme> }>;
-    label: string;
-}) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 18, color: "text.secondary" }} />
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#374151" }}>
-            {label}
-        </Typography>
-    </Box>
-);
+import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 export default function ProductForm({ onClose }: { onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);

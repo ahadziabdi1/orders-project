@@ -4,13 +4,7 @@ import { Box, TextField, Button, CircularProgress, Typography } from '@mui/mater
 import { Inventory2Outlined, PaidOutlined } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import { updateProductAction } from '@/app/actions/products';
-
-const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 18, color: 'text.secondary' }} />
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#374151' }}>{label}</Typography>
-    </Box>
-);
+import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 export default function ProductEditForm({ product, onCancel, onSuccess }: { product: any, onCancel: () => void, onSuccess: () => void }) {
     const [isUpdating, setIsUpdating] = useState(false);

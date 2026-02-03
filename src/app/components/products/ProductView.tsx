@@ -1,12 +1,6 @@
 import { Box, Typography, Button } from '@mui/material';
 import { Inventory2Outlined, PaidOutlined } from "@mui/icons-material";
-
-const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
-    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-        <Icon sx={{ fontSize: 18, color: 'text.secondary' }} />
-        <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#374151' }}>{label}</Typography>
-    </Box>
-);
+import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 const DetailBlock = ({ icon, label, value, isHighlight = false }: any) => (
     <Box>

@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { AppBar, Toolbar, Button, Container, Box, IconButton, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Inventory, People, ReceiptLong, Menu as MenuIcon } from '@mui/icons-material';
+import { Dashboard, Inventory, People, ReceiptLong, Menu as MenuIcon } from '@mui/icons-material';
 
 const navItems = [
+    { label: 'Dashboard', href: '/dashboard', icon: <Dashboard /> },
     { label: 'Orders', href: '/orders', icon: <ReceiptLong /> },
     { label: 'Products', href: '/products', icon: <Inventory /> },
     { label: 'Customers', href: '/customers', icon: <People /> },

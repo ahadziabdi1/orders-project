@@ -97,7 +97,7 @@ export default function CustomersTable(props: CustomersTableProps) {
                         rows.map((customer) => (
                             <Box key={customer.id} sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box>
-                                    <Typography fontWeight={700}>{customer.name}</Typography>
+                                    <Typography fontWeight={700}>{customer.full_name}</Typography>
                                     <Typography variant="body2" color="textSecondary">{customer.email}</Typography>
                                 </Box>
                                 <IconButton size="small" onClick={(e) => handleMenuOpen(e, customer.id)}>

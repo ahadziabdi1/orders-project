@@ -95,7 +95,18 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                 options={customers}
                                 disabled={isLoading}
                                 getOptionLabel={(option) => option.full_name}
-                                onChange={(_, data) => field.onChange(data?.id)}
+                                onChange={(_, data) => {
+                                    field.onChange(data?.id);
+
+                                    if (data?.delivery_address) {
+                                        setValue('delivery_address', data.delivery_address, {
+                                            shouldValidate: true,
+                                            shouldDirty: true
+                                        });
+                                    } else {
+                                        setValue('delivery_address', '');
+                                    }
+                                }}
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
@@ -165,11 +176,21 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     <LabelWithIcon icon={HomeOutlined} label="Delivery Address" />
                     <TextField
                         fullWidth
-                        disabled={isLoading}
-                        placeholder="Enter full delivery address"
+                        disabled
+                        value={watch('delivery_address') || ''}
+                        placeholder="Select a customer to see address"
                         {...register("delivery_address", { required: "Delivery address is required" })}
                         error={!!errors.delivery_address}
                         helperText={errors.delivery_address?.message}
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                                WebkitTextFillColor: "#0f172a",
+                                fontWeight: 500
+                            },
+                            "& .MuiOutlinedInput-root.Mui-disabled": {
+                                backgroundColor: "#f8fafc"
+                            }
+                        }}
                     />
                 </Box>
 

@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Dialog, DialogContent, IconButton } from '@mui/material';
+import { Dialog, DialogContent, IconButton, CircularProgress, Box, Typography } from '@mui/material';
 import { Close } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 
@@ -22,7 +22,7 @@ export default function ProductDetailsModal({ open, onClose, productId, initialM
     const [product, setProduct] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
 
-    const fetchProduct = async () => {
+    const fetchProduct = useCallback(async () => {
         if (!productId) return;
         setLoading(true);
         try {
@@ -39,38 +39,46 @@ export default function ProductDetailsModal({ open, onClose, productId, initialM
         } finally {
             setLoading(false);
         }
-    };
+    }, [productId]);
 
     useEffect(() => {
         if (open && productId) {
             setMode(initialMode);
             fetchProduct();
         }
-    }, [open, productId, initialMode]);
+    }, [open, productId, initialMode, fetchProduct]);
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '16px' } }}>
-            <IconButton onClick={onClose} sx={{ position: 'absolute', right: 16, top: 16, color: '#64748b' }}>
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+            <IconButton onClick={onClose} sx={{ position: 'absolute', right: 16, top: 16, color: '#64748b', zIndex: 1 }}>
                 <Close />
             </IconButton>
 
             <DialogContent sx={{ p: 5 }}>
-                {mode === 'edit' ? (
-                    <ProductEditForm
-                        product={product}
-                        onCancel={() => setMode('view')}
-                        onSuccess={() => {
-                            fetchProduct();
-                            setMode('view');
-                            if (onSuccess) onSuccess();
-                        }}
-                    />
+                {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : product ? (
+                    mode === 'edit' ? (
+                        <ProductEditForm
+                            product={product}
+                            onCancel={() => setMode('view')}
+                            onSuccess={() => {
+                                fetchProduct();
+                                setMode('view');
+                                if (onSuccess) onSuccess();
+                            }}
+                        />
+                    ) : (
+                        <ProductView
+                            product={product}
+                            onEdit={() => setMode('edit')}
+                            onClose={onClose}
+                        />
+                    )
                 ) : (
-                    <ProductView
-                        product={product}
-                        onEdit={() => setMode('edit')}
-                        onClose={onClose}
-                    />
+                    <Typography>No product data found.</Typography>
                 )}
             </DialogContent>
         </Dialog>

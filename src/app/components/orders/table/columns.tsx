@@ -2,7 +2,7 @@ import React from 'react';
 import { GridColDef, GridRenderEditCellParams, useGridApiContext } from '@mui/x-data-grid';
 import { Chip, IconButton, Box, Typography, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
-import { Order, getStatusColor, OrderStatus } from '@/app/types/orders';
+import { Order, getStatusColor, OrderStatus } from '@/app/types/types';
 
 const STATUS_OPTIONS: OrderStatus[] = ['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'];
 

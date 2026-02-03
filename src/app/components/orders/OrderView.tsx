@@ -1,6 +1,6 @@
 import { Box, Typography, Button } from '@mui/material';
 import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, HomeOutlined } from "@mui/icons-material";
-import { Order, DetailBlockProps } from '@/app/types/orders';
+import { Order, DetailBlockProps } from '@/app/types/types';
 
 const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

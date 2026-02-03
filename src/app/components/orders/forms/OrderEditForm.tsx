@@ -4,7 +4,7 @@ import { Box, TextField, MenuItem, Button, CircularProgress, Autocomplete, Typog
 import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, HomeOutlined, LocalOfferOutlined } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import { updateOrderAction } from '@/app/actions/orders';
-import { Order, OrderFormData, OrderStatus, Product, Customer } from '@/app/types/orders';
+import { Order, OrderFormData, OrderStatus, Product, Customer } from '@/app/types/types';
 
 const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>

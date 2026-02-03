@@ -13,7 +13,7 @@ import {
 import { toast } from "react-hot-toast";
 import { supabase } from "@/lib/supabaseClient";
 import { createOrderAction } from "@/app/actions/orders";
-import { OrderFormData, Product, Customer } from "@/app/types/orders";
+import { OrderFormData, Product, Customer } from "@/app/types/types";
 
 interface OrderFormProps {
     onClose: () => void;

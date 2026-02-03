@@ -5,7 +5,7 @@ import { DataGrid, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
 import { toast } from 'react-hot-toast';
 
-import { Order } from '@/app/types/orders';
+import { Order } from '@/app/types/types';
 import { getColumns } from '@/app/components/orders/table/columns';
 import { TableFilters } from '@/app/components/orders/table/TableFilters';
 import { OrderMobileCard } from '@/app/components/orders/table/OrderMobileCard';

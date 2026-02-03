@@ -52,6 +52,14 @@ export interface DetailBlockProps {
     isHighlight?: boolean;
 }
 
+export type ProductFormData = {
+    name: string;
+    unit_price: number;
+    description?: string;
+    category?: string;
+    stock_quantity?: number;
+};
+
 export const getStatusColor = (status: string) => {
     switch (status?.toUpperCase()) {
         case "CREATED":

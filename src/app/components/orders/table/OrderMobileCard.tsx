@@ -1,6 +1,6 @@
 import { Card, CardContent, Box, Typography, IconButton, Chip } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
-import { Order, getStatusColor } from '@/app/types/orders';
+import { Order, getStatusColor } from '@/app/types/types';
 
 interface OrderMobileCardProps {
     order: Order;

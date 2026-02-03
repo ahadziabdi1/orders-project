@@ -18,7 +18,7 @@ import OrderForm from '@/app/components/orders/forms/OrderForm';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { GridSortModel } from '@mui/x-data-grid';
 
-import { Order, OrderStatus } from '@/app/types/orders';
+import { Order, OrderStatus } from '@/app/types/types';
 
 export default function OrdersPage() {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);

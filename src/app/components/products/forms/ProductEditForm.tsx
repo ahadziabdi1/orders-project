@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Box, TextField, Button, CircularProgress, Typography } from '@mui/material';
 import { Inventory2Outlined, PaidOutlined } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
-import { supabase } from '@/lib/supabaseClient';
+import { updateProductAction } from '@/app/actions/products';
 
 const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: string }) => (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
@@ -14,6 +14,7 @@ const LabelWithIcon = ({ icon: Icon, label }: { icon: React.ElementType, label: 
 
 export default function ProductEditForm({ product, onCancel, onSuccess }: { product: any, onCancel: () => void, onSuccess: () => void }) {
     const [isUpdating, setIsUpdating] = useState(false);
+
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             name: product.name,
@@ -27,15 +28,14 @@ export default function ProductEditForm({ product, onCancel, onSuccess }: { prod
     const handleUpdate = async (formData: any) => {
         setIsUpdating(true);
         try {
-            const { error } = await supabase
-                .from('products')
-                .update(formData)
-                .eq('id', product.id);
+            const result = await updateProductAction(product.id, formData);
 
-            if (error) throw error;
-
-            toast.success("Product updated successfully");
-            onSuccess();
+            if (result.success) {
+                toast.success(result.message);
+                onSuccess();
+            } else {
+                toast.error(result.message);
+            }
         } catch (error) {
             toast.error("An unexpected error occurred");
         } finally {

@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Dialog, DialogContent, CircularProgress, Box, IconButton, Typography, Chip, Divider } from '@mui/material';
 import { Close } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
-import { Order, Product, Customer, getStatusColor } from '@/app/types/orders';
+import { Order, Product, Customer, getStatusColor } from '@/app/types/types';
 
 import OrderView from '@/app/components/orders/OrderView';
 import OrderEditForm from '@/app/components/orders/forms/OrderEditForm';

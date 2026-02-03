@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { revalidatePath } from "next/cache";
-import { OrderFormData, ActionResponse } from "@/app/types/orders";
+import { OrderFormData, ActionResponse } from "@/app/types/types";
 
 export async function createOrderAction(
     formData: OrderFormData

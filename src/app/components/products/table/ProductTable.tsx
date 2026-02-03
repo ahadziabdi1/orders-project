@@ -191,7 +191,6 @@ export default function ProductsTable(props: ProductsTableProps) {
                 productId={selectedId}
                 initialMode={modalMode}
                 onSuccess={() => {
-                    toast.success(`Product ${modalMode === 'edit' ? 'updated' : 'created'} successfully`);
                     onRefresh();
                     setModalOpen(false);
                 }}

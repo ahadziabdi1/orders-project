@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { Dialog, DialogContent, CircularProgress, Box, IconButton, Typography, Divider } from '@mui/material';
+import { Dialog, DialogContent, IconButton } from '@mui/material';
 import { Close } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 
-// You'll need to create these two sub-components similarly to your Order ones
-// import ProductView from './ProductView';
-// import ProductEditForm from './forms/ProductEditForm';
+import ProductView from './ProductView';
+import ProductEditForm from './forms/ProductEditForm';
 
 interface ProductDetailsModalProps {
     open: boolean;
@@ -56,34 +55,22 @@ export default function ProductDetailsModal({ open, onClose, productId, initialM
             </IconButton>
 
             <DialogContent sx={{ p: 5 }}>
-                {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}><CircularProgress /></Box>
+                {mode === 'edit' ? (
+                    <ProductEditForm
+                        product={product}
+                        onCancel={() => setMode('view')}
+                        onSuccess={() => {
+                            fetchProduct();
+                            setMode('view');
+                            if (onSuccess) onSuccess();
+                        }}
+                    />
                 ) : (
-                    <Box>
-                        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>
-                            {mode === 'edit' ? "Edit Product" : "Product Details"}
-                        </Typography>
-                        <Divider sx={{ mb: 4 }} />
-
-                        {mode === 'edit' ? (
-                            <Box>
-                                {/* Replace with your ProductEditForm */}
-                                <Typography>Edit Form for {product?.name} goes here.</Typography>
-                                <button onClick={() => setMode('view')}>Cancel</button>
-                            </Box>
-                        ) : (
-                            <Box>
-                                {/* Replace with your ProductView */}
-                                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Name</Typography>
-                                <Typography sx={{ mb: 2 }}>{product?.name}</Typography>
-
-                                <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>Price</Typography>
-                                <Typography sx={{ mb: 2 }}>${product?.unit_price}</Typography>
-
-                                <button onClick={() => setMode('edit')}>Edit Product</button>
-                            </Box>
-                        )}
-                    </Box>
+                    <ProductView
+                        product={product}
+                        onEdit={() => setMode('edit')}
+                        onClose={onClose}
+                    />
                 )}
             </DialogContent>
         </Dialog>

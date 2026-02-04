@@ -36,6 +36,30 @@ export async function getDashboardStats() {
 
     const orders = ordersRes.data || [];
 
+    const dailyRevenue: Record<string, number> = {};
+
+    const last30Days = Array.from({ length: 30 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().split("T")[0];
+    }).reverse();
+
+    last30Days.forEach((date) => (dailyRevenue[date] = 0));
+
+    orders.forEach((order) => {
+      const date = new Date(order.created_at).toISOString().split("T")[0];
+      if (dailyRevenue.hasOwnProperty(date)) {
+        dailyRevenue[date] += Number(order.total_price || 0);
+      }
+    });
+
+    const revenueTrends = Object.entries(dailyRevenue)
+      .map(([date, amount]) => ({
+        date,
+        amount,
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
     const totalRevenue = orders.reduce(
       (acc, o) => acc + Number(o.total_price || 0),
       0
@@ -74,6 +98,7 @@ export async function getDashboardStats() {
       productCount: productsRes.count || 0,
       recentOrders: recentOrdersRes.data || [],
       topProducts,
+      revenueTrends,
     };
   } catch (err) {
     console.error("Unexpected Dashboard Error:", err);

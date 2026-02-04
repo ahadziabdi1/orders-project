@@ -10,6 +10,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import { getStatusColor } from '@/app/types/types';
 import OrderPieChart from '@/app/components/dashboard/OrderPieChart';
 import TopProductsChart from '@/app/components/dashboard/TopProductsChart';
+import RevenueTrendChart from '@/app/components/dashboard/RevenueTrendChart';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -53,6 +54,17 @@ export default async function DashboardPage() {
             </Box>
 
             <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '1.2fr 0.8fr' }} gap={3}>
+
+                <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid #eee' }}>
+                    <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 700 }}>Revenue Trends</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                            Daily revenue performance across your store.
+                        </Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <RevenueTrendChart data={stats.revenueTrends} />
+                    </CardContent>
+                </Card>
 
                 <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid #eee', height: '100%' }}>
                     <CardContent>

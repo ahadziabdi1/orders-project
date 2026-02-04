@@ -22,25 +22,25 @@ export default function TopProductsChart({ data }: { data: { label: string, valu
                         fill: '#666',
                         fontSize: 12,
                         fontWeight: 500,
-                        angle: -45, // Rotate labels
-                        textAnchor: 'end', // Align rotated text
-                        dominantBaseline: 'middle',
+                        angle: -45,
+                        textAnchor: 'end',
+                        dominantBaseline: 'central',
                     },
                 }]}
                 xAxis={[{
-                    valueFormatter: (value) => `$${value / 1000}k`,
+                    valueFormatter: (value: number | null) => `$${(value ?? 0) / 1000}k`,
                 }]}
                 series={[{
                     dataKey: 'value',
-                    valueFormatter: (value) => `$${value?.toLocaleString()}`,
+                    valueFormatter: (value: number | null) => `$${value?.toLocaleString()}`,
                     color: '#8b5cf6',
                 }]}
                 layout="horizontal"
-                height={400} // Increased height for rotated labels
-                margin={{ left: 20, right: 20, top: 20, bottom: 100 }} // More bottom margin for rotated labels
+                height={400}
+                margin={{ left: 20, right: 20, top: 20, bottom: 100 }}
                 grid={{ vertical: true }}
+                hideLegend={true}
                 slotProps={{
-                    legend: { hidden: true },
                     bar: {
                         rx: 5,
                         ry: 5,

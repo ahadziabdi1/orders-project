@@ -9,6 +9,7 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import { getStatusColor } from '@/app/types/types';
 import OrderPieChart from '@/app/components/dashboard/OrderPieChart';
+import TopProductsChart from '@/app/components/dashboard/TopProductsChart';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -138,6 +139,21 @@ export default async function DashboardPage() {
                                     </ListItem>
                                 ))}
                         </List>
+                    </CardContent>
+                </Card>
+
+                <Card elevation={0} sx={{ borderRadius: 4, border: '1px solid #eee' }}>
+                    <CardContent>
+                        <Box sx={{ mb: 2 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 700 }}>Top Selling Products</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Revenue generated per product based on all-time sales.
+                            </Typography>
+                        </Box>
+                        <Divider sx={{ mb: 3 }} />
+                        <Box sx={{ height: 350, width: '100%' }}>
+                            <TopProductsChart data={stats.topProducts} />
+                        </Box>
                     </CardContent>
                 </Card>
             </Box>

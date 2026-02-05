@@ -22,7 +22,6 @@ export default function CustomerForm({ onClose }: { onClose: () => void }) {
 
     const onSubmit = async (data: any) => {
         setIsLoading(true);
-
         try {
             const { error } = await supabase
                 .from('customers')
@@ -34,13 +33,11 @@ export default function CustomerForm({ onClose }: { onClose: () => void }) {
                     }
                 ]);
 
-            if (error) {
-                toast.error(`Database error: ${error.message}`);
-            } else {
-                toast.success("Customer saved successfully!");
-                onClose();
-            }
-        } catch (error) {
+            if (error) throw error;
+
+            toast.success("Customer saved successfully!");
+            onClose();
+        } catch (error: any) {
             toast.error("An unexpected error occurred");
         } finally {
             setIsLoading(false);

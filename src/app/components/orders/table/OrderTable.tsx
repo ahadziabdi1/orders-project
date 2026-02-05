@@ -43,7 +43,7 @@ export default function OrdersTable(props: OrdersTableProps) {
     loading,
     sortModel,
     onSortChange,
-    userRole 
+    userRole
   } = props;
 
   const theme = useTheme();
@@ -67,7 +67,9 @@ export default function OrdersTable(props: OrdersTableProps) {
   };
 
   const handleOpenDetails = (mode: 'view' | 'edit') => {
-    setModalMode(mode);
+    // Ako user pokuša edit kroz menu, a nije admin, forsiraj 'view'
+    const finalMode = userRole !== 'ADMIN' ? 'view' : mode;
+    setModalMode(finalMode);
     setDetailsModalOpen(true);
     handleMenuClose();
   };
@@ -94,9 +96,25 @@ export default function OrdersTable(props: OrdersTableProps) {
     setSelectedOrderId(null);
   };
 
-  const columns = useMemo(() => getColumns(handleMenuOpen), []);
+  const columns = useMemo(() => {
+    const baseColumns = getColumns(handleMenuOpen);
+    return baseColumns.map((col) => {
+      if (col.field === 'status') {
+        return {
+          ...col,
+          editable: userRole === 'ADMIN',
+        };
+      }
+      return col;
+    });
+  }, [userRole]);
 
   const processRowUpdate = async (newRow: Order, oldRow: Order) => {
+    if (userRole !== 'ADMIN') {
+      toast.error("Nemate dozvolu za izmjenu statusa.");
+      return oldRow;
+    }
+
     if (newRow.status === oldRow.status) return oldRow;
 
     const { error } = await supabase
@@ -160,7 +178,7 @@ export default function OrdersTable(props: OrdersTableProps) {
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={(error) => console.log(error)}
             onCellClick={(params) => {
-              if (params.field === 'status' && params.colDef.editable) {
+              if (params.field === 'status' && userRole === 'ADMIN') {
                 if (params.cellMode === 'view') {
                   apiRef.current.startCellEditMode({ id: params.id, field: params.field });
                 }

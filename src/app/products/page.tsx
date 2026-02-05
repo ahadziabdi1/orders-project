@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabaseClient';
-import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
+import { createBrowserClient } from '@supabase/ssr';
+import {
+    Container,
+    Typography,
+    Box,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    IconButton,
+    CircularProgress
+} from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { GridSortModel } from '@mui/x-data-grid';
 
@@ -11,12 +21,46 @@ import ProductForm from '@/app/components/products/forms/ProductForm';
 import ProductsTable from '@/app/components/products/table/ProductTable';
 
 export default function ProductsPage() {
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [sortModel, setSortModel] = useState<GridSortModel>([]);
 
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const [isRoleLoading, setIsRoleLoading] = useState(true);
+
+    useEffect(() => {
+        const getUserData = async () => {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
+
+                    setUserRole(profile?.role || 'USER');
+                } else {
+                    setUserRole('USER');
+                }
+            } catch (error) {
+                console.error("Error retrieving role:", error);
+                setUserRole('USER');
+            } finally {
+                setIsRoleLoading(false);
+            }
+        };
+        getUserData();
+    }, [supabase]);
+
     const { data, isLoading, refetch, isRefetching } = useQuery({
-        queryKey: ['products', paginationModel, sortModel],
+        queryKey: ['products', paginationModel, sortModel, userRole],
+        enabled: !!userRole,
         queryFn: async () => {
             const from = paginationModel.page * paginationModel.pageSize;
             const to = from + paginationModel.pageSize - 1;
@@ -36,6 +80,16 @@ export default function ProductsPage() {
         }
     });
 
+    if (isRoleLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    const isAdmin = userRole === 'ADMIN';
+
     return (
         <Box sx={{ minHeight: '100vh', py: { xs: 3, md: 6 }, backgroundColor: '#fdfdfd' }}>
             <Container maxWidth="lg">
@@ -50,30 +104,35 @@ export default function ProductsPage() {
                     <Box>
                         <Typography variant="h4" sx={{ fontWeight: 800 }}>Product Catalog</Typography>
                         <Typography variant="body1" color="textSecondary">
-                            Manage your system's product list and pricing.
+                            {isAdmin
+                                ? "Manage your system's product list and pricing."
+                                : "View available products and their current prices."}
                         </Typography>
                     </Box>
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setIsModalOpen(true)}
-                        sx={{
-                            backgroundColor: '#0f172a',
-                            color: '#fff',
-                            borderRadius: 2,
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            px: 3,
-                            py: 1,
-                            width: { xs: '100%', sm: 'auto' },
-                            '&:hover': {
-                                backgroundColor: '#1e293b',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-                            }
-                        }}
-                    >
-                        Add New Product
-                    </Button>
+
+                    {isAdmin && (
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setIsModalOpen(true)}
+                            sx={{
+                                backgroundColor: '#0f172a',
+                                color: '#fff',
+                                borderRadius: 2,
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                px: 3,
+                                py: 1,
+                                width: { xs: '100%', sm: 'auto' },
+                                '&:hover': {
+                                    backgroundColor: '#1e293b',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                }
+                            }}
+                        >
+                            Add New Product
+                        </Button>
+                    )}
                 </Box>
 
                 <ProductsTable
@@ -85,6 +144,7 @@ export default function ProductsPage() {
                     sortModel={sortModel}
                     onSortChange={setSortModel}
                     onRefresh={refetch}
+                    userRole={userRole}
                 />
 
                 <Dialog

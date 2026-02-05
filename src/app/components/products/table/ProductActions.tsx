@@ -11,7 +11,7 @@ interface ActionMenuProps {
     onDelete: () => void;
     onView: () => void;
     onEdit: () => void;
-    orderId: string | null;
+    productId: string | null;
 }
 
 export function ActionMenu({
@@ -21,7 +21,7 @@ export function ActionMenu({
     onDelete,
     onView,
     onEdit,
-    orderId
+    productId
 }: ActionMenuProps) {
     return (
         <Menu

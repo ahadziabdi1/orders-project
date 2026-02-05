@@ -168,7 +168,7 @@ export default function ProductsTable(props: ProductsTableProps) {
                         onView={() => handleAction('view')}
                         onEdit={() => handleAction('edit')}
                         onDelete={() => handleAction('delete')}
-                        productId={selectedId} // Add this line
+                        productId={selectedId} 
                     />
                     <DeleteDialog
                         open={deleteDialogOpen}

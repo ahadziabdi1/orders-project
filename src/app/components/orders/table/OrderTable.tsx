@@ -67,7 +67,6 @@ export default function OrdersTable(props: OrdersTableProps) {
   };
 
   const handleOpenDetails = (mode: 'view' | 'edit') => {
-    // Ako user pokuša edit kroz menu, a nije admin, forsiraj 'view'
     const finalMode = userRole !== 'ADMIN' ? 'view' : mode;
     setModalMode(finalMode);
     setDetailsModalOpen(true);

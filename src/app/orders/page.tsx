@@ -65,17 +65,17 @@ export default function OrdersPage() {
             let query = supabase
                 .from('orders')
                 .select(`
-                    id,
-                    customer_id,
-                    product_id,
-                    quantity,
-                    total_price,
-                    delivery_address,
-                    status,
-                    created_at,
-                    products (name),
-                    customers (full_name)
-                `, { count: 'exact' });
+        id,
+        customer_id, 
+        product_id,
+        quantity,
+        total_price,
+        delivery_address,
+        status,
+        created_at,
+        products (name),
+        customers (full_name)
+    `, { count: 'exact' });
 
             if (userRole === 'USER' && currentUser) {
                 query = query.eq('customer_id', currentUser.id);
@@ -99,7 +99,7 @@ export default function OrdersPage() {
 
             const formatted: Order[] = (data || []).map((o: any) => ({
                 id: o.id,
-                customer_id: o.customer_id,
+                customer_uuid: o.customer_id,
                 product_id: o.product_id,
                 quantity: o.quantity,
                 delivery_address: o.delivery_address,

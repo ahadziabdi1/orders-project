@@ -15,7 +15,7 @@ export interface Product {
 }
 
 export interface Customer {
-    id: string;
+    customer_uuid: string;
     full_name: string;
     email: string;
     delivery_address: string;
@@ -25,7 +25,7 @@ export interface Customer {
 export type CustomerFormData = Omit<Customer, "id" | "created_at">;
 
 export interface OrderFormData {
-    customer_id: string;
+    customer_uuid: string;
     product_id: string;
     quantity: number;
     total_price: number;

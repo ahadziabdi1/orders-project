@@ -57,7 +57,16 @@ export default function OrderForm({ onClose }: OrderFormProps) {
     const onSubmit = async (data: OrderFormData) => {
         setIsLoading(true);
         try {
-            const result = await createOrderAction(data);
+            const payload = {
+                product_id: data.product_id,
+                quantity: data.quantity,
+                total_price: data.total_price,
+                delivery_address: data.delivery_address,
+                status: data.status,
+                customer_id: data.customer_uuid 
+            };
+
+            const result = await createOrderAction(payload as any);
 
             if (result.success) {
                 toast.success(result.message);
@@ -87,7 +96,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                 <Box>
                     <LabelWithIcon icon={PersonOutline} label="Customer Name" />
                     <Controller
-                        name="customer_id"
+                        name="customer_uuid"
                         control={control}
                         rules={{ required: "Selecting a customer is required" }}
                         render={({ field }) => (
@@ -96,7 +105,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                 disabled={isLoading}
                                 getOptionLabel={(option) => option.full_name}
                                 onChange={(_, data) => {
-                                    field.onChange(data?.id);
+                                    field.onChange(data?.customer_uuid);
 
                                     if (data?.delivery_address) {
                                         setValue('delivery_address', data.delivery_address, {
@@ -111,8 +120,8 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                     <TextField
                                         {...params}
                                         placeholder="Search customers..."
-                                        error={!!errors.customer_id}
-                                        helperText={errors.customer_id?.message}
+                                        error={!!errors.customer_uuid}
+                                        helperText={errors.customer_uuid?.message}
                                     />
                                 )}
                             />
@@ -176,10 +185,11 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     <LabelWithIcon icon={HomeOutlined} label="Delivery Address" />
                     <TextField
                         fullWidth
-                        disabled
-                        value={watch('delivery_address') || ''}
-                        placeholder="Select a customer to see address"
+                        disabled={isLoading || (!!watch('customer_uuid') && !!customers.find(c => c.customer_uuid === watch('customer_uuid'))?.delivery_address)}
+
                         {...register("delivery_address", { required: "Delivery address is required" })}
+
+                        placeholder={watch('customer_uuid') ? "Enter delivery address..." : "Select a customer first"}
                         error={!!errors.delivery_address}
                         helperText={errors.delivery_address?.message}
                         sx={{

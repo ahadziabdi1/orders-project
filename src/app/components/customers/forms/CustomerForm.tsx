@@ -1,15 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { TextField, Button, Box, CircularProgress } from "@mui/material";
 import { PersonOutline, EmailOutlined, HomeOutlined, LocationCityOutlined } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
-import { createCustomerAction } from "@/app/actions/customers";
+import { createBrowserClient } from '@supabase/ssr';
 import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 export default function CustomerForm({ onClose }: { onClose: () => void }) {
     const [isLoading, setIsLoading] = useState(false);
+
+    const supabase = useMemo(() => createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ), []);
 
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: { name: "", email: "", street: "", city: "" },
@@ -18,19 +23,22 @@ export default function CustomerForm({ onClose }: { onClose: () => void }) {
     const onSubmit = async (data: any) => {
         setIsLoading(true);
 
-        const formattedData = {
-            full_name: data.name,
-            email: data.email,
-            delivery_address: `${data.street}, ${data.city}`,
-        };
-
         try {
-            const result = await createCustomerAction(formattedData);
-            if (result.success) {
-                toast.success(result.message);
-                onClose();
+            const { error } = await supabase
+                .from('customers')
+                .insert([
+                    {
+                        full_name: data.name,
+                        email: data.email,
+                        delivery_address: `${data.street}, ${data.city}`
+                    }
+                ]);
+
+            if (error) {
+                toast.error(`Database error: ${error.message}`);
             } else {
-                toast.error(result.message);
+                toast.success("Customer saved successfully!");
+                onClose();
             }
         } catch (error) {
             toast.error("An unexpected error occurred");

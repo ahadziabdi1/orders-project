@@ -95,7 +95,7 @@ export default function CustomersTable(props: CustomersTableProps) {
                         </Typography>
                     ) : (
                         rows.map((customer) => (
-                            <Box key={customer.id} sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box key={customer.id || customer.customer_uuid} sx={{ p: 2, bgcolor: 'white', borderRadius: 2, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Box>
                                     <Typography fontWeight={700}>{customer.full_name}</Typography>
                                     <Typography variant="body2" color="textSecondary">{customer.email}</Typography>
@@ -117,6 +117,7 @@ export default function CustomersTable(props: CustomersTableProps) {
                         apiRef={apiRef}
                         rows={rows}
                         columns={columns}
+                        getRowId={(row) => row.id || row.customer_uuid}
                         rowCount={rowCount}
                         loading={loading}
                         sortingMode="server"
@@ -147,7 +148,7 @@ export default function CustomersTable(props: CustomersTableProps) {
                 onView={() => handleAction('view')}
                 onEdit={() => handleAction('edit')}
                 onDelete={() => handleAction('delete')}
-                customerId={selectedId} 
+                customerId={selectedId}
             />
 
             <CustomerDetailsModal

@@ -1,16 +1,21 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabaseClient';
+import { createBrowserClient } from '@supabase/ssr';
 import { Container, Typography, Box, Button, Dialog, DialogTitle, DialogContent, IconButton } from '@mui/material';
 import { Add as AddIcon, Close as CloseIcon } from '@mui/icons-material';
 import { GridSortModel } from '@mui/x-data-grid';
 
-import CustomerForm from '@/app/components/customers/forms//CustomerForm';
+import CustomerForm from '@/app/components/customers/forms/CustomerForm';
 import CustomersTable from '@/app/components/customers/table/CustomerTable';
 
 export default function CustomersPage() {
+    const supabase = useMemo(() => createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    ), []);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
     const [sortModel, setSortModel] = useState<GridSortModel>([]);
@@ -31,8 +36,10 @@ export default function CustomersPage() {
             }
 
             const { data: customers, error, count } = await query.range(from, to);
-            if (error) throw error;
-            return { customers, total: count || 0 };
+
+            if (error) { throw error; }
+
+            return { customers: customers || [], total: count || 0 };
         }
     });
 
@@ -98,15 +105,15 @@ export default function CustomersPage() {
                         }
                     }}
                 >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2, pt: 1 }}>
-                    <DialogTitle sx={{ fontWeight: 800 }}>New Customer</DialogTitle>
-                    <IconButton onClick={() => setIsModalOpen(false)} size="small"><CloseIcon /></IconButton>
-                </Box>
-                <DialogContent sx={{ pt: 0 }}>
-                    <CustomerForm onClose={() => { setIsModalOpen(false); refetch(); }} />
-                </DialogContent>
-            </Dialog>
-        </Container>
-        </Box >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2, pt: 1 }}>
+                        <DialogTitle sx={{ fontWeight: 800 }}>New Customer</DialogTitle>
+                        <IconButton onClick={() => setIsModalOpen(false)} size="small"><CloseIcon /></IconButton>
+                    </Box>
+                    <DialogContent sx={{ pt: 0 }}>
+                        <CustomerForm onClose={() => { setIsModalOpen(false); refetch(); }} />
+                    </DialogContent>
+                </Dialog>
+            </Container>
+        </Box>
     );
 }

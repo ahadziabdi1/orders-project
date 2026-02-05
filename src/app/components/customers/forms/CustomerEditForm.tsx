@@ -3,7 +3,7 @@ import { Box, TextField, Button, CircularProgress } from '@mui/material';
 import { updateCustomerAction } from '@/app/actions/customers';
 import { toast } from 'react-hot-toast';
 import { useState } from 'react';
-import { HomeOutlined, LocationCityOutlined } from '@mui/icons-material'; // Added City icon
+import { HomeOutlined, LocationCityOutlined } from '@mui/icons-material'; 
 import LabelWithIcon from '@/app/components/common/LabelWithIcon';
 
 export default function CustomerEditForm({ customer, onCancel, onSuccess }: any) {
@@ -33,7 +33,7 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
                 delivery_address: combinedAddress
             };
 
-            const result = await updateCustomerAction(customer.id, payload);
+            const result = await updateCustomerAction(customer.customer_uuid, payload);
             if (result.success) {
                 toast.success("Customer updated successfully");
                 onSuccess();

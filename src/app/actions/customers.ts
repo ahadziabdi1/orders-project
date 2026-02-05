@@ -22,7 +22,7 @@ export async function updateCustomerAction(
   const { error } = await supabase
     .from("customers")
     .update(formData)
-    .eq("id", id);
+    .eq("customer_uuid", id);
 
   if (error) return { success: false, message: error.message };
 
@@ -33,8 +33,11 @@ export async function updateCustomerAction(
 export async function deleteCustomerAction(
   id: string
 ): Promise<ActionResponse> {
-  const { error } = await supabase.from("customers").delete().eq("id", id);
-
+  const { error } = await supabase
+    .from("customers")
+    .delete()
+    .eq("customer_uuid", id);
+    
   if (error) return { success: false, message: error.message };
 
   revalidatePath("/customers");

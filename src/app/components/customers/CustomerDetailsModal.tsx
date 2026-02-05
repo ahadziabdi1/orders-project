@@ -20,7 +20,7 @@ export default function CustomerDetailsModal({ open, onClose, customerId, initia
             const { data, error } = await supabase
                 .from('customers')
                 .select('*')
-                .eq('id', customerId)
+                .eq('customer_uuid', customerId)
                 .single();
             if (error) throw error;
             setCustomer(data);

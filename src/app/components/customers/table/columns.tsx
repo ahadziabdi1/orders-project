@@ -45,7 +45,7 @@ export const getCustomerColumns = (onMenuOpen: (event: React.MouseEvent<HTMLElem
         filterable: false,
         hideable: false,
         renderCell: (params) => (
-            <IconButton size="small" onClick={(e) => onMenuOpen(e, params.row.id)}>
+            <IconButton size="small" onClick={(e) => onMenuOpen(e, params.row.customer_uuid)}>
                 <MoreVert fontSize="small" />
             </IconButton>
         ),

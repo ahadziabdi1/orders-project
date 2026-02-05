@@ -100,7 +100,7 @@ export default function CustomersTable(props: CustomersTableProps) {
                                     <Typography fontWeight={700}>{customer.full_name}</Typography>
                                     <Typography variant="body2" color="textSecondary">{customer.email}</Typography>
                                 </Box>
-                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, customer.id)}>
+                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, customer.id || customer.customer_uuid)}>
                                     <MoreVert fontSize="small" />
                                 </IconButton>
                             </Box>
@@ -117,7 +117,7 @@ export default function CustomersTable(props: CustomersTableProps) {
                         apiRef={apiRef}
                         rows={rows}
                         columns={columns}
-                        getRowId={(row) => row.id || row.customer_uuid}
+                        getRowId={(row) => row.customer_uuid}
                         rowCount={rowCount}
                         loading={loading}
                         sortingMode="server"

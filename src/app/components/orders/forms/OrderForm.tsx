@@ -8,7 +8,7 @@ import {
     PaidOutlined, LocalOfferOutlined, HomeOutlined
 } from "@mui/icons-material";
 import { toast } from "react-hot-toast";
-import { supabase } from "@/lib/supabaseClient";
+import { createBrowserClient } from '@supabase/ssr';
 import { createOrderAction } from "@/app/actions/orders";
 import { OrderFormData, Product, Customer } from "@/app/types/types";
 import LabelWithIcon from "@/app/components/common/LabelWithIcon";
@@ -18,34 +18,76 @@ interface OrderFormProps {
 }
 
 export default function OrderForm({ onClose }: OrderFormProps) {
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const [isLoading, setIsLoading] = useState(false);
     const [lookupsLoading, setLookupsLoading] = useState(true);
     const [products, setProducts] = useState<Product[]>([]);
     const [customers, setCustomers] = useState<Customer[]>([]);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    const [, setIsAddressFetched] = useState(false);
 
     const { control, register, handleSubmit, watch, setValue, formState: { errors } } = useForm<OrderFormData>({
         defaultValues: {
             quantity: 1,
             total_price: 0,
-            status: 'CREATED'
+            status: 'CREATED',
         }
     });
 
     const selectedProductId = watch('product_id');
     const quantity = watch('quantity');
+    const isAdmin = userRole === 'ADMIN';
 
     useEffect(() => {
         async function loadData() {
-            const [pRes, cRes] = await Promise.all([
-                supabase.from('products').select('*'),
-                supabase.from('customers').select('*')
-            ]);
-            setProducts(pRes.data || []);
-            setCustomers(cRes.data || []);
-            setLookupsLoading(false);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                let currentRole = 'USER';
+
+                if (user) {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', user.id)
+                        .single();
+
+                    currentRole = profile?.role || 'USER';
+                    setUserRole(currentRole);
+                }
+
+                const [pRes, cRes] = await Promise.all([
+                    supabase.from('products').select('*'),
+                    supabase.from('customers').select('*')
+                ]);
+
+                const fetchedCustomers = cRes.data || [];
+                setProducts(pRes.data || []);
+                setCustomers(fetchedCustomers);
+
+                if (currentRole === 'USER' && user) {
+                    const profileData = fetchedCustomers.find(c => c.customer_uuid === user.id);
+                    if (profileData) {
+                        setValue('customer_uuid', profileData.customer_uuid);
+                        if (profileData.delivery_address) {
+                            setValue('delivery_address', profileData.delivery_address);
+                            setIsAddressFetched(true);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading data:", error);
+                toast.error("Error loading data.");
+            } finally {
+                setLookupsLoading(false);
+            }
         }
         loadData();
-    }, []);
+    }, [supabase, setValue]);
 
     useEffect(() => {
         const product = products.find(p => p.id === selectedProductId);
@@ -57,13 +99,31 @@ export default function OrderForm({ onClose }: OrderFormProps) {
     const onSubmit = async (data: OrderFormData) => {
         setIsLoading(true);
         try {
+            const finalAddress = data.delivery_address;
+            const customerId = data.customer_uuid;
+
+            const originalCustomer = customers.find(c => c.customer_uuid === customerId);
+
+            if (originalCustomer && originalCustomer.delivery_address !== finalAddress) {
+                const { error: updateError } = await supabase
+                    .from('customers')
+                    .update({ delivery_address: finalAddress })
+                    .eq('customer_uuid', customerId);
+
+                if (updateError) {
+                    console.error("Error updating customer address:", updateError);
+                } else {
+                    toast.success("Customer address updated successfully.");
+                }
+            }
+
             const payload = {
+                customer_id: customerId,
                 product_id: data.product_id,
                 quantity: data.quantity,
                 total_price: data.total_price,
-                delivery_address: data.delivery_address,
-                status: data.status,
-                customer_id: data.customer_uuid 
+                delivery_address: finalAddress,
+                status: isAdmin ? (data.status || 'CREATED') : 'CREATED'
             };
 
             const result = await createOrderAction(payload as any);
@@ -89,44 +149,52 @@ export default function OrderForm({ onClose }: OrderFormProps) {
         );
     }
 
+    const isAddressReadOnly = false;
+
     return (
         <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ p: { xs: 1, sm: 2 }, width: '100%' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 
                 <Box>
                     <LabelWithIcon icon={PersonOutline} label="Customer Name" />
-                    <Controller
-                        name="customer_uuid"
-                        control={control}
-                        rules={{ required: "Selecting a customer is required" }}
-                        render={({ field }) => (
-                            <Autocomplete
-                                options={customers}
-                                disabled={isLoading}
-                                getOptionLabel={(option) => option.full_name}
-                                onChange={(_, data) => {
-                                    field.onChange(data?.customer_uuid);
-
-                                    if (data?.delivery_address) {
-                                        setValue('delivery_address', data.delivery_address, {
-                                            shouldValidate: true,
-                                            shouldDirty: true
-                                        });
-                                    } else {
-                                        setValue('delivery_address', '');
-                                    }
-                                }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        placeholder="Search customers..."
-                                        error={!!errors.customer_uuid}
-                                        helperText={errors.customer_uuid?.message}
-                                    />
-                                )}
-                            />
-                        )}
-                    />
+                    {isAdmin ? (
+                        <Controller
+                            name="customer_uuid"
+                            control={control}
+                            rules={{ required: "Selecting a customer is required" }}
+                            render={({ field }) => (
+                                <Autocomplete
+                                    options={customers}
+                                    disabled={isLoading}
+                                    getOptionLabel={(option) => option.full_name || ""}
+                                    value={customers.find(c => c.customer_uuid === field.value) || null}
+                                    isOptionEqualToValue={(option, value) => option.customer_uuid === value.customer_uuid}
+                                    onChange={(_, data) => {
+                                        field.onChange(data?.customer_uuid);
+                                        if (data?.delivery_address) {
+                                            setValue('delivery_address', data.delivery_address);
+                                            setIsAddressFetched(true);
+                                        }
+                                    }}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            placeholder="Search customers..."
+                                            error={!!errors.customer_uuid}
+                                            helperText={errors.customer_uuid?.message}
+                                        />
+                                    )}
+                                />
+                            )}
+                        />
+                    ) : (
+                        <TextField
+                            fullWidth
+                            disabled
+                            value={customers.find(c => c.customer_uuid === watch('customer_uuid'))?.full_name || "Loading..."}
+                            sx={{ "& .MuiInputBase-input.Mui-disabled": { WebkitTextFillColor: "#0f172a" } }}
+                        />
+                    )}
                 </Box>
 
                 <Box>
@@ -140,6 +208,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                 options={products}
                                 disabled={isLoading}
                                 getOptionLabel={(option) => `${option.name} ($${option.unit_price})`}
+                                value={products.find(p => p.id === field.value) || null}
                                 onChange={(_, data) => field.onChange(data?.id)}
                                 renderInput={(params) => (
                                     <TextField
@@ -185,10 +254,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     <LabelWithIcon icon={HomeOutlined} label="Delivery Address" />
                     <TextField
                         fullWidth
-                        disabled={isLoading || (!!watch('customer_uuid') && !!customers.find(c => c.customer_uuid === watch('customer_uuid'))?.delivery_address)}
-
                         {...register("delivery_address", { required: "Delivery address is required" })}
-
                         placeholder={watch('customer_uuid') ? "Enter delivery address..." : "Select a customer first"}
                         error={!!errors.delivery_address}
                         helperText={errors.delivery_address?.message}
@@ -196,9 +262,6 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                             "& .MuiInputBase-input.Mui-disabled": {
                                 WebkitTextFillColor: "#0f172a",
                                 fontWeight: 500
-                            },
-                            "& .MuiOutlinedInput-root.Mui-disabled": {
-                                backgroundColor: "#f8fafc"
                             }
                         }}
                     />
@@ -207,14 +270,22 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                 <Box>
                     <LabelWithIcon icon={LocalOfferOutlined} label="Status" />
                     <TextField
-                        select
                         fullWidth
-                        disabled={isLoading}
-                        defaultValue="CREATED"
+                        select={isAdmin}
+                        disabled={isLoading || !isAdmin}
+                        value={watch('status')}
                         {...register("status")}
+                        sx={{
+                            "& .MuiInputBase-input.Mui-disabled": {
+                                WebkitTextFillColor: "#0f172a",
+                            },
+                            "& .MuiSelect-icon": { display: isAdmin ? "block" : "none" }
+                        }}
                     >
-                        <MenuItem value="CREATED">Created</MenuItem>
-                        <MenuItem value="PROCESSING">Processing</MenuItem>
+                        {isAdmin ? [
+                            <MenuItem key="CREATED" value="CREATED">Created</MenuItem>,
+                            <MenuItem key="PROCESSING" value="PROCESSING">Processing</MenuItem>
+                        ] : null}
                     </TextField>
                 </Box>
 
@@ -232,6 +303,6 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     </Button>
                 </Box>
             </Box>
-        </Box>
+        </Box >
     );
 }

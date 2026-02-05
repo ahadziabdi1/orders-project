@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import { Box, TextField, MenuItem, Button, CircularProgress, Autocomplete, Typography } from '@mui/material';
+import { Box, TextField, MenuItem, Button, CircularProgress, Autocomplete } from '@mui/material';
 import { PersonOutline, ShoppingBagOutlined, NumbersOutlined, PaidOutlined, HomeOutlined, LocalOfferOutlined } from "@mui/icons-material";
 import { toast } from 'react-hot-toast';
 import { updateOrderAction } from '@/app/actions/orders';
@@ -19,7 +19,7 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
     const [isUpdating, setIsUpdating] = useState(false);
     const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm<OrderFormData>({
         defaultValues: {
-            customer_id: order.customer_id,
+            customer_uuid: (order as any).customer_id || order.customer_uuid,
             product_id: order.product_id,
             quantity: order.quantity,
             total_price: order.total_price,
@@ -60,31 +60,32 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3 }}>
                 <Box>
                     <LabelWithIcon icon={PersonOutline} label="Customer" />
-                    <Controller
-                        name="customer_id"
-                        control={control}
-                        rules={{ required: "Please select a customer" }}
-                        render={({ field, fieldState: { error } }) => (
-                            <Autocomplete
-                                {...field}
-                                options={customers}
-                                getOptionLabel={(o) => o.full_name || ""}
-                                value={customers.find(c => c.id === field.value) || null}
-                                onChange={(_, data) => {
-                                    field.onChange(data ? data.id : null);
+                    {(() => {
+                        const currentCustomerId = order.customer_uuid || (order as any).customer_id;
+
+                        const selectedCustomer = customers.find((c: any) =>
+                            c.id == currentCustomerId || c.customer_uuid == currentCustomerId
+                        );
+
+                        return (
+                            <TextField
+                                fullWidth
+                                disabled
+                                value={selectedCustomer ? selectedCustomer.full_name : (order as any).customer_name || "Customer not found"}
+                                sx={{
+                                    mt: 1,
+                                    "& .MuiInputBase-root.Mui-disabled": {
+                                        bgcolor: '#f8fafc',
+                                    },
+                                    "& .MuiInputBase-input.Mui-disabled": {
+                                        WebkitTextFillColor: "#0f172a",
+                                        fontWeight: 600
+                                    }
                                 }}
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        error={!!error}
-                                        helperText={error?.message}
-                                        placeholder="Select a customer"
-                                        sx={{ mt: 1 }}
-                                    />
-                                )}
                             />
-                        )}
-                    />
+                        );
+                    })()}
+                    <input type="hidden" {...register("customer_uuid")} />
                 </Box>
 
                 <Box>

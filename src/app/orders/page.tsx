@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabaseClient';
+import { createBrowserClient } from '@supabase/ssr';
 import {
     Container,
     Typography,
@@ -21,18 +21,43 @@ import { GridSortModel } from '@mui/x-data-grid';
 import { Order, OrderStatus } from '@/app/types/types';
 
 export default function OrdersPage() {
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [page, setPage] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(10);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
     const [sortModel, setSortModel] = useState<GridSortModel>([
         { field: 'created_at', sort: 'desc' }
     ]);
 
+    useEffect(() => {
+        const getUserData = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                setCurrentUser(user);
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+                setUserRole(profile?.role || 'USER');
+            }
+        };
+        getUserData();
+    }, [supabase]);
+
     const { data, isLoading, refetch } = useQuery({
-        queryKey: ['orders', page, pageSize, searchTerm, statusFilter, sortModel],
+        queryKey: ['orders', page, pageSize, searchTerm, statusFilter, sortModel, userRole, currentUser?.id],
+        enabled: !!userRole,
         queryFn: async () => {
             const from = page * pageSize;
             const to = from + pageSize - 1;
@@ -52,26 +77,20 @@ export default function OrdersPage() {
                     customers (full_name)
                 `, { count: 'exact' });
 
+            if (userRole === 'USER' && currentUser) {
+                query = query.eq('customer_id', currentUser.id);
+            }
+
             if (sortModel.length > 0) {
                 const { field, sort } = sortModel[0];
                 const isAsc = sort === 'asc';
-
-                if (field === 'product_name') {
-                    query = query.order('products(name)', { ascending: isAsc });
-                } else if (field === 'customer_name') {
-                    query = query.order('customers(full_name)', { ascending: isAsc });
-                } else {
-                    query = query.order(field, { ascending: isAsc });
-                }
+                if (field === 'product_name') query = query.order('products(name)', { ascending: isAsc });
+                else if (field === 'customer_name') query = query.order('customers(full_name)', { ascending: isAsc });
+                else query = query.order(field, { ascending: isAsc });
             }
 
-            if (searchTerm) {
-                query = query.ilike('customers.full_name', `%${searchTerm}%`);
-            }
-
-            if (statusFilter !== 'ALL') {
-                query = query.eq('status', statusFilter as OrderStatus);
-            }
+            if (searchTerm) query = query.ilike('customers.full_name', `%${searchTerm}%`);
+            if (statusFilter !== 'ALL') query = query.eq('status', statusFilter as OrderStatus);
 
             query = query.range(from, to);
 
@@ -91,10 +110,7 @@ export default function OrdersPage() {
                 customer_name: o.customers?.full_name || 'Unknown Customer'
             }));
 
-            return {
-                orders: formatted,
-                totalCount: count || 0
-            };
+            return { orders: formatted, totalCount: count || 0 };
         }
     });
 
@@ -116,11 +132,11 @@ export default function OrdersPage() {
                     gap: 2
                 }}>
                     <Box>
-                        <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.75rem', md: '2.125rem' } }}>
-                            Orders Management
+                        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+                            {userRole === 'ADMIN' ? 'Orders Management' : 'My Orders'}
                         </Typography>
                         <Typography variant="body1" color="textSecondary">
-                            Manage and track orders.
+                            {userRole === 'ADMIN' ? 'Manage and track orders.' : 'My personal order history and status.'}
                         </Typography>
                     </Box>
 
@@ -162,6 +178,7 @@ export default function OrdersPage() {
                     onSortChange={(model) => setSortModel(model)}
                     rowCount={data?.totalCount ?? 0}
                     loading={isLoading}
+                    userRole={userRole}
                 />
 
                 <Dialog

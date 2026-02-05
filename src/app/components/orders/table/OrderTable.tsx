@@ -27,6 +27,7 @@ interface OrdersTableProps {
   loading: boolean;
   sortModel: GridSortModel;
   onSortChange: (model: GridSortModel) => void;
+  userRole: string | null;
 }
 
 export default function OrdersTable(props: OrdersTableProps) {
@@ -41,7 +42,8 @@ export default function OrdersTable(props: OrdersTableProps) {
     rowCount,
     loading,
     sortModel,
-    onSortChange
+    onSortChange,
+    userRole 
   } = props;
 
   const theme = useTheme();
@@ -119,6 +121,7 @@ export default function OrdersTable(props: OrdersTableProps) {
         onSearchChange={(e: ChangeEvent<HTMLInputElement>) => onFilterChange(e.target.value, statusFilter)}
         onStatusChange={(newStatus) => onFilterChange(searchTerm, newStatus)}
         onReset={() => onFilterChange('', 'ALL')}
+        userRole={userRole || ''}
       />
 
       {isMobile ? (
@@ -145,7 +148,9 @@ export default function OrdersTable(props: OrdersTableProps) {
           boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
         }}>
           <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>All Orders</Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800 }}>
+              {userRole === 'ADMIN' ? 'All Orders' : 'My Orders'}
+            </Typography>
             <Typography variant="body2" color="textSecondary">{rowCount} orders found</Typography>
           </Box>
           <DataGrid

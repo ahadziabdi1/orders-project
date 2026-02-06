@@ -175,8 +175,8 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                     control={control}
                     render={({ field }) => (
                         <TextField
-                            select
                             fullWidth
+                            select={isAdmin}
                             disabled={isUpdating || !isAdmin}
                             {...field}
                             sx={{
@@ -186,13 +186,16 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                                     fontWeight: 700,
                                 } : {},
                                 "& .MuiOutlinedInput-root.Mui-disabled": !isAdmin ? {
-                                    bgcolor: '#f8fafc'
+                                    bgcolor: '#f8fafc',
+                                    "& fieldset": { border: '1px solid #e2e8f0' }
                                 } : {}
                             }}
                         >
-                            {(['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'] as OrderStatus[]).map((s) => (
-                                <MenuItem key={s} value={s}>{s}</MenuItem>
-                            ))}
+                            {isAdmin ? (
+                                (['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'] as OrderStatus[]).map((s) => (
+                                    <MenuItem key={s} value={s}>{s}</MenuItem>
+                                ))
+                            ) : null}
                         </TextField>
                     )}
                 />

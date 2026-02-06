@@ -39,7 +39,7 @@ export default function ProductForm({ onClose }: { onClose: () => void }) {
                 toast.error(result.message);
             }
         } catch (error) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsLoading(false);
         }

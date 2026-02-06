@@ -38,10 +38,10 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
                 toast.success("Customer updated successfully");
                 onSuccess();
             } else {
-                toast.error(result.message || "Failed to update");
+                toast.error(result.message || "Failed to update.");
             }
         } catch (error) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setLoading(false);
         }

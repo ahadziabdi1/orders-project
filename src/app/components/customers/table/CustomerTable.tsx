@@ -66,15 +66,15 @@ export default function CustomersTable(props: CustomersTableProps) {
         try {
             const result = await deleteCustomerAction(selectedId);
             if (result.success) {
-                toast.success(result.message || 'Customer deleted successfully');
+                toast.success(result.message || 'Customer deleted successfully!');
                 setDeleteDialogOpen(false);
                 setSelectedId(null);
                 onRefresh();
             } else {
-                toast.error(result.message || 'Failed to delete customer');
+                toast.error(result.message || 'Failed to delete customer.');
             }
         } catch (error) {
-            toast.error('An unexpected error occurred');
+            toast.error('An unexpected error occurred.');
         }
     };
 

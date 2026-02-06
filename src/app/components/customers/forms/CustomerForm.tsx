@@ -38,7 +38,7 @@ export default function CustomerForm({ onClose }: { onClose: () => void }) {
             toast.success("Customer saved successfully!");
             onClose();
         } catch (error: any) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsLoading(false);
         }

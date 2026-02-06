@@ -25,7 +25,7 @@ export default function CustomerDetailsModal({ open, onClose, customerId, initia
             if (error) throw error;
             setCustomer(data);
         } catch (err) {
-            toast.error("Failed to load customer data");
+            toast.error("Failed to load customer data.");
         } finally {
             setLoading(false);
         }

@@ -1,5 +1,5 @@
 import { Box, Typography, Button } from '@mui/material';
-import { MailOutline, HomeOutlined, CalendarTodayOutlined } from "@mui/icons-material";
+import { MailOutline, HomeOutlined, CalendarTodayOutlined, BadgeOutlined } from "@mui/icons-material";
 import LabelWithIcon from "@/app/components/common/LabelWithIcon";
 
 const DetailBlock = ({ icon, label, value, isHighlight = false }: any) => (
@@ -19,6 +19,12 @@ export default function CustomerView({ customer, onEdit, onClose }: any) {
                     icon={MailOutline}
                     label="Email Address"
                     value={customer.email}
+                />
+                <DetailBlock
+                    icon={BadgeOutlined} 
+                    label="User Role"
+                    value={customer.role || 'USER'}
+                    isHighlight
                 />
                 <DetailBlock
                     icon={CalendarTodayOutlined}

@@ -80,7 +80,6 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                     }
                 }
             } catch (error) {
-                console.error("Error loading data:", error);
                 toast.error("Error loading data.");
             } finally {
                 setLookupsLoading(false);
@@ -135,7 +134,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                 toast.error(result.message);
             }
         } catch (error) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsLoading(false);
         }

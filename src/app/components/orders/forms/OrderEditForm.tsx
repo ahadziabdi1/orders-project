@@ -46,10 +46,10 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                 toast.success(result.message);
                 onSuccess();
             } else {
-                toast.error(result.message || "Update failed");
+                toast.error(result.message || "Update failed.");
             }
         } catch (error) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsUpdating(false);
         }

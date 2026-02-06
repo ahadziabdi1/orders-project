@@ -35,7 +35,7 @@ export default function ProductDetailsModal({ open, onClose, productId, initialM
             if (error) throw error;
             setProduct(data);
         } catch (err) {
-            toast.error("Failed to load product data");
+            toast.error("Failed to load product data.");
         } finally {
             setLoading(false);
         }

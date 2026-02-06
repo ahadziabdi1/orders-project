@@ -78,15 +78,15 @@ export default function OrdersTable(props: OrdersTableProps) {
     try {
       const result = await deleteOrderAction(selectedOrderId);
       if (result.success) {
-        toast.success(result.message || 'Order deleted successfully');
+        toast.success(result.message || 'Order deleted successfully!');
         setDeleteDialogOpen(false);
         setSelectedOrderId(null);
         if (onRefresh) onRefresh();
       } else {
-        toast.error(result.message || 'Failed to delete order');
+        toast.error(result.message || 'Failed to delete order.');
       }
     } catch {
-      toast.error('An unexpected error occurred');
+      toast.error('An unexpected error occurred.');
     }
   };
 
@@ -110,7 +110,7 @@ export default function OrdersTable(props: OrdersTableProps) {
 
   const processRowUpdate = async (newRow: Order, oldRow: Order) => {
     if (userRole !== 'ADMIN') {
-      toast.error("Nemate dozvolu za izmjenu statusa.");
+      toast.error("You do not have permission to change the status.");
       return oldRow;
     }
 
@@ -122,7 +122,7 @@ export default function OrdersTable(props: OrdersTableProps) {
       .eq('id', newRow.id);
 
     if (error) {
-      toast.error("Failed to update status");
+      toast.error("Failed to update status.");
       return oldRow;
     }
 

@@ -46,7 +46,7 @@ export default function OrderDetailsModal({ open, onClose, orderId, initialMode,
                 });
             }
         } catch (err) {
-            toast.error("Failed to load order data");
+            toast.error("Failed to load order data.");
         } finally {
             setLoading(false);
         }

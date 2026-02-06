@@ -31,7 +31,7 @@ export default function ProductEditForm({ product, onCancel, onSuccess }: { prod
                 toast.error(result.message);
             }
         } catch (error) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsUpdating(false);
         }

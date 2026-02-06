@@ -38,13 +38,13 @@ export default function ProfileEditForm({ profile, onCancel, onSuccess }: any) {
             const result = await updateProfileAction(customer?.customer_uuid, payload);
 
             if (result.success) {
-                toast.success(result.message || "Profile updated successfully");
+                toast.success(result.message || "Profile updated successfully!");
                 onSuccess();
             } else {
-                toast.error(result.message || "Failed to update");
+                toast.error(result.message || "Failed to update.");
             }
         } catch (error) {
-            toast.error("An unexpected error occurred");
+            toast.error("An unexpected error occurred.");
         } finally {
             setIsUpdating(false);
         }

@@ -62,14 +62,14 @@ export default function ProductsTable(props: ProductsTableProps) {
         try {
             const result = await deleteProductAction(selectedId);
             if (result.success) {
-                toast.success('Product deleted successfully');
+                toast.success('Product deleted successfully!');
                 setDeleteDialogOpen(false);
                 onRefresh();
             } else {
-                toast.error(result.message || 'Failed to delete');
+                toast.error(result.message || 'Failed to delete.');
             }
         } catch {
-            toast.error('An error occurred');
+            toast.error('An error occurred.');
         }
     };
 

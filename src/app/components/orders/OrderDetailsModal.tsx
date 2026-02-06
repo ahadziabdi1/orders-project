@@ -16,9 +16,17 @@ interface OrderDetailsModalProps {
     orderId: string | null;
     initialMode: 'view' | 'edit';
     onSuccess?: () => void;
+    userRole: string | null;
 }
 
-export default function OrderDetailsModal({ open, onClose, orderId, initialMode, onSuccess }: OrderDetailsModalProps) {
+export default function OrderDetailsModal({
+    open,
+    onClose,
+    orderId,
+    initialMode,
+    onSuccess,
+    userRole
+}: OrderDetailsModalProps) {
     const [mode, setMode] = useState(initialMode);
     const [order, setOrder] = useState<Order | null>(null);
     const [loading, setLoading] = useState(true);
@@ -89,6 +97,7 @@ export default function OrderDetailsModal({ open, onClose, orderId, initialMode,
                         {mode === 'edit' ? (
                             <OrderEditForm
                                 order={order!}
+                                userRole={userRole || ''}
                                 products={products}
                                 customers={customers}
                                 onCancel={() => setMode('view')}

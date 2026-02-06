@@ -13,11 +13,14 @@ interface Props {
     customers: Customer[];
     onCancel: () => void;
     onSuccess: () => void;
-    userRole?: string; 
+    userRole?: string | null;
 }
 
 export default function OrderEditForm({ order, products, customers, onCancel, onSuccess, userRole }: Props) {
     const [isUpdating, setIsUpdating] = useState(false);
+
+    const isAdmin = userRole === 'ADMIN';
+
     const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm<OrderFormData>({
         defaultValues: {
             customer_uuid: order.customer_uuid,
@@ -63,11 +66,9 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                     <LabelWithIcon icon={PersonOutline} label="Customer" />
                     {(() => {
                         const currentCustomerId = order.customer_uuid || (order as any).customer_id;
-
                         const selectedCustomer = customers.find((c: any) =>
                             c.id == currentCustomerId || c.customer_uuid == currentCustomerId
                         );
-
                         return (
                             <TextField
                                 fullWidth
@@ -107,7 +108,6 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                                         error={!!error}
                                         helperText={error?.message}
                                         placeholder="Select a product"
-                                        sx={{ mt: 1 }}
                                     />
                                 )}
                             />
@@ -177,9 +177,18 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                         <TextField
                             select
                             fullWidth
-                            disabled={isUpdating || userRole !== 'ADMIN'}
+                            disabled={isUpdating || !isAdmin}
                             {...field}
-                            sx={{ mt: 1 }}
+                            sx={{
+                                mt: 1,
+                                "& .MuiInputBase-input.Mui-disabled": !isAdmin ? {
+                                    WebkitTextFillColor: "#0f172a",
+                                    fontWeight: 700,
+                                } : {},
+                                "& .MuiOutlinedInput-root.Mui-disabled": !isAdmin ? {
+                                    bgcolor: '#f8fafc'
+                                } : {}
+                            }}
                         >
                             {(['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'] as OrderStatus[]).map((s) => (
                                 <MenuItem key={s} value={s}>{s}</MenuItem>
@@ -190,8 +199,7 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1.5, mt: 3 }}>
-                <Button onClick={onCancel} disabled={isUpdating} sx={{ color: '#64748b', borderRadius: '8px', textTransform: 'none', px: 4, fontWeight: 600 }}
-                >
+                <Button onClick={onCancel} disabled={isUpdating} sx={{ color: '#64748b', borderRadius: '8px', textTransform: 'none', px: 4, fontWeight: 600 }}>
                     Cancel
                 </Button>
                 <Button type="submit" variant="contained" disabled={isUpdating} sx={{

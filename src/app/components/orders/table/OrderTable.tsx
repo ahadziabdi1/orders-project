@@ -240,6 +240,7 @@ export default function OrdersTable(props: OrdersTableProps) {
         orderId={selectedOrderId}
         initialMode={modalMode}
         onSuccess={onRefresh}
+        userRole={userRole}
       />
 
       <DeleteDialog

@@ -64,7 +64,6 @@ export default function ProfileEditForm({ profile, onCancel, onSuccess }: any) {
                         })}
                         error={!!errors.full_name}
                         helperText={errors.full_name?.message as string}
-                        sx={{ mt: 1 }}
                     />
                 </Box>
 

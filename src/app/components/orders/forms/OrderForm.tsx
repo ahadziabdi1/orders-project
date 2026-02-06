@@ -286,14 +286,16 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                                 WebkitTextFillColor: "#0f172a",
                                 fontWeight: 700
                             },
-                            bgcolor: '#f8fafc',
+                            bgcolor: !isAdmin ? '#f8fafc' : 'transparent',
                             "& .MuiSelect-icon": { display: isAdmin ? "block" : "none" }
                         }}
                     >
                         {isAdmin ? [
                             <MenuItem key="CREATED" value="CREATED">Created</MenuItem>,
-                            <MenuItem key="PROCESSING" value="PROCESSING">Processing</MenuItem>
-                        ] : null}
+                            <MenuItem key="PROCESSING" value="PROCESSING">Processing</MenuItem>,
+                        ] : (
+                            <MenuItem value={watch('status')}>{watch('status')}</MenuItem>
+                        )}
                     </TextField>
                 </Box>
 

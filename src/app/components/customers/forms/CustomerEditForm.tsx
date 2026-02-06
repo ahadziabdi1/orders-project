@@ -3,7 +3,7 @@ import { Box, TextField, Button, CircularProgress } from '@mui/material';
 import { updateCustomerAction } from '@/app/actions/customers';
 import { toast } from 'react-hot-toast';
 import { useState } from 'react';
-import { HomeOutlined, LocationCityOutlined } from '@mui/icons-material'; 
+import { HomeOutlined, LocationCityOutlined, EmailOutlined, PersonOutline } from '@mui/icons-material';
 import LabelWithIcon from '@/app/components/common/LabelWithIcon';
 
 export default function CustomerEditForm({ customer, onCancel, onSuccess }: any) {
@@ -50,30 +50,30 @@ export default function CustomerEditForm({ customer, onCancel, onSuccess }: any)
     return (
         <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 4 }}>
-                <TextField
-                    label="Full Name"
-                    fullWidth
-                    {...register("full_name", {
-                        required: "Name is required",
-                        minLength: { value: 2, message: "Name must be at least 2 characters" }
-                    })}
-                    error={!!errors.full_name}
-                    helperText={errors.full_name?.message as string}
-                />
 
-                <TextField
-                    label="Email Address"
-                    fullWidth
-                    {...register("email", {
-                        required: "Email is required",
-                        pattern: {
-                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                            message: "Invalid email address"
-                        }
-                    })}
-                    error={!!errors.email}
-                    helperText={errors.email?.message as string}
-                />
+                <Box>
+                    <LabelWithIcon icon={PersonOutline} label="Full Name" />
+                    <TextField
+                        fullWidth
+                        {...register("full_name", {
+                            required: "Name is required",
+                            minLength: { value: 2, message: "Name must be at least 2 characters" }
+                        })}
+                        error={!!errors.full_name}
+                        helperText={errors.full_name?.message as string}
+                        sx={{ mt: 1 }}
+                    />
+                </Box>
+
+                <Box>
+                    <LabelWithIcon icon={EmailOutlined} label="Email Address" />
+                    <TextField
+                        fullWidth
+                        disabled
+                        value={customer?.email || ''}
+                        sx={{ mt: 1, bgcolor: '#f8fafc' }}
+                    />
+                </Box>
             </Box>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 4 }}>

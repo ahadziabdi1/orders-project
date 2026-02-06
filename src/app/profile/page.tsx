@@ -29,12 +29,12 @@ export default function ProfilePage() {
                 .eq('id', user.id)
                 .single();
 
-            if (profileError) throw profileError;
+            if (profileError || !profile) throw new Error("Profile not found");
 
-            const { data: customer, error: customerError } = await supabase
+            const { data: customer } = await supabase
                 .from('customers')
                 .select('customer_uuid, full_name, email, delivery_address, created_at')
-                .eq('email', profile.email)
+                .eq('customer_uuid', profile.id) 
                 .maybeSingle();
 
             return {

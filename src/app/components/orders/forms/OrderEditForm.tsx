@@ -13,9 +13,10 @@ interface Props {
     customers: Customer[];
     onCancel: () => void;
     onSuccess: () => void;
+    userRole?: string; 
 }
 
-export default function OrderEditForm({ order, products, customers, onCancel, onSuccess }: Props) {
+export default function OrderEditForm({ order, products, customers, onCancel, onSuccess, userRole }: Props) {
     const [isUpdating, setIsUpdating] = useState(false);
     const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm<OrderFormData>({
         defaultValues: {
@@ -176,7 +177,7 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                         <TextField
                             select
                             fullWidth
-                            disabled={isUpdating}
+                            disabled={isUpdating || userRole !== 'ADMIN'}
                             {...field}
                             sx={{ mt: 1 }}
                         >

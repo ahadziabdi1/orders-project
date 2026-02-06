@@ -42,6 +42,6 @@ export async function updateProfileAction(
 
   return {
     success: true,
-    message: "Profile and Customer data updated successfully!",
+    message: "Profile data updated successfully!",
   };
 }

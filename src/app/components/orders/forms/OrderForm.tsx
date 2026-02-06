@@ -191,7 +191,14 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                             fullWidth
                             disabled
                             value={customers.find(c => c.customer_uuid === watch('customer_uuid'))?.full_name || "Loading..."}
-                            sx={{ "& .MuiInputBase-input.Mui-disabled": { WebkitTextFillColor: "#0f172a" } }}
+                            sx={{
+                                mt: 1,
+                                "& .MuiInputBase-input.Mui-disabled": {
+                                    WebkitTextFillColor: "#0f172a",
+                                    fontWeight: 700
+                                },
+                                bgcolor: '#f8fafc',
+                            }}
                         />
                     )}
                 </Box>

@@ -19,7 +19,7 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
     const [isUpdating, setIsUpdating] = useState(false);
     const { register, handleSubmit, formState: { errors }, control, watch, setValue } = useForm<OrderFormData>({
         defaultValues: {
-            customer_uuid: (order as any).customer_id || order.customer_uuid,
+            customer_uuid: order.customer_uuid,
             product_id: order.product_id,
             quantity: order.quantity,
             total_price: order.total_price,
@@ -71,16 +71,13 @@ export default function OrderEditForm({ order, products, customers, onCancel, on
                             <TextField
                                 fullWidth
                                 disabled
-                                value={selectedCustomer ? selectedCustomer.full_name : (order as any).customer_name || "Customer not found"}
+                                value={selectedCustomer ? selectedCustomer.full_name : "Customer not found"}
                                 sx={{
-                                    mt: 1,
-                                    "& .MuiInputBase-root.Mui-disabled": {
-                                        bgcolor: '#f8fafc',
-                                    },
                                     "& .MuiInputBase-input.Mui-disabled": {
                                         WebkitTextFillColor: "#0f172a",
-                                        fontWeight: 600
-                                    }
+                                        fontWeight: 700
+                                    },
+                                    bgcolor: '#f8fafc'
                                 }}
                             />
                         );

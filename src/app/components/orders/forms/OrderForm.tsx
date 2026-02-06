@@ -117,7 +117,7 @@ export default function OrderForm({ onClose }: OrderFormProps) {
             }
 
             const payload = {
-                customer_id: customerId,
+                customer_uuid: customerId,
                 product_id: data.product_id,
                 quantity: data.quantity,
                 total_price: data.total_price,
@@ -277,7 +277,9 @@ export default function OrderForm({ onClose }: OrderFormProps) {
                         sx={{
                             "& .MuiInputBase-input.Mui-disabled": {
                                 WebkitTextFillColor: "#0f172a",
+                                fontWeight: 700
                             },
+                            bgcolor: '#f8fafc',
                             "& .MuiSelect-icon": { display: isAdmin ? "block" : "none" }
                         }}
                     >

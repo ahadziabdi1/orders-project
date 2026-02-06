@@ -66,7 +66,7 @@ export default function OrdersPage() {
                 .from('orders')
                 .select(`
                 id,
-                customer_id, 
+                customer_uuid, 
                 product_id,
                 quantity,
                 total_price,
@@ -78,7 +78,7 @@ export default function OrdersPage() {
             `, { count: 'exact' });
 
             if (userRole === 'USER' && currentUser) {
-                query = query.eq('customer_id', currentUser.id);
+                query = query.eq('customer_uuid', currentUser.id);
             }
 
             if (sortModel.length > 0) {

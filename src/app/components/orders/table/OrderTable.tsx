@@ -67,8 +67,7 @@ export default function OrdersTable(props: OrdersTableProps) {
   };
 
   const handleOpenDetails = (mode: 'view' | 'edit') => {
-    const finalMode = userRole !== 'ADMIN' ? 'view' : mode;
-    setModalMode(finalMode);
+    setModalMode(mode);
     setDetailsModalOpen(true);
     handleMenuClose();
   };

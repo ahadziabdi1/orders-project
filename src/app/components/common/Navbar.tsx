@@ -75,7 +75,7 @@ export default function Navbar() {
         : [
             { label: 'My Orders', href: '/orders', icon: <ReceiptLong sx={iconStyles} /> },
             { label: 'Products', href: '/products', icon: <Inventory sx={iconStyles} /> },
-            { label: 'My Profile', href: '/profile', icon: <Person sx={iconStyles} /> },
+            { label: 'Profile', href: '/profile', icon: <Person sx={iconStyles} /> },
         ];
 
     return (

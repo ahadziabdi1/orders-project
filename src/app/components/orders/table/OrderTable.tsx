@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useMemo, ChangeEvent } from 'react';
+import { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { DataGrid, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
+import { Button } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
 import { toast } from 'react-hot-toast';
 
-import { Order } from '@/app/types/types';
+import { Customer, Order, Product } from '@/app/types/types';
 import { getColumns } from '@/app/components/orders/table/columns';
 import { TableFilters } from '@/app/components/orders/table/TableFilters';
 import { OrderMobileCard } from '@/app/components/orders/table/OrderMobileCard';
@@ -57,6 +59,20 @@ export default function OrdersTable(props: OrdersTableProps) {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]); //
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: pData } = await supabase.from('products').select('*');
+      if (pData) setProducts(pData);
+
+      const { data: cData } = await supabase.from('customers').select('*');
+      if (cData) setCustomers(cData);
+    };
+    fetchData();
+  }, []);
+
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
     setAnchorEl(event.currentTarget);
     setSelectedOrderId(id);
@@ -95,38 +111,84 @@ export default function OrdersTable(props: OrdersTableProps) {
   };
 
   const columns = useMemo(() => {
-    const baseColumns = getColumns(handleMenuOpen);
+    const baseColumns = getColumns(handleMenuOpen, products, customers);
+
     return baseColumns.map((col) => {
-      if (col.field === 'status') {
-        return {
-          ...col,
-          editable: userRole === 'ADMIN',
-        };
-      }
-      return col;
+      const isAlwaysReadonly = ['actions', 'id', 'created_at'].includes(col.field);
+
+      return {
+        ...col,
+        editable: !isAlwaysReadonly && userRole === 'ADMIN',
+      };
     });
-  }, [userRole]);
+  }, [userRole, handleMenuOpen, products, customers]);
 
   const processRowUpdate = async (newRow: Order, oldRow: Order) => {
-    if (userRole !== 'ADMIN') {
-      toast.error("You do not have permission to change the status.");
-      return oldRow;
-    }
+    if (userRole !== 'ADMIN') return oldRow;
 
-    if (newRow.status === oldRow.status) return oldRow;
+    const updateData = {
+      product_id: newRow.product_id,
+      status: newRow.status,
+      delivery_address: newRow.delivery_address,
+      quantity: newRow.quantity,
+      customer_uuid: newRow.customer_uuid,
+      total_price: newRow.total_price
+    };
 
     const { error } = await supabase
       .from('orders')
-      .update({ status: newRow.status })
+      .update(updateData)
       .eq('id', newRow.id);
 
     if (error) {
-      toast.error("Failed to update status.");
+      toast.error("Failed to update.");
       return oldRow;
     }
 
-    toast.success("Order status updated.");
+    toast.success("Order updated.");
     return newRow;
+  };
+
+  const handleQuickAdd = async () => {
+    const defaultProduct = products[0];
+    const defaultCustomer = customers[0];
+
+    if (!defaultProduct || !defaultCustomer) {
+      toast.error("Loading products and customers, please wait...");
+      return;
+    }
+
+    const newOrder = {
+      product_id: defaultProduct.id,
+      customer_uuid: defaultCustomer.customer_uuid,
+      quantity: 1,
+      total_price: defaultProduct.unit_price,
+      status: 'CREATED',
+      delivery_address: 'New Address...',
+    };
+
+    const { data, error } = await supabase
+      .from('orders')
+      .insert([newOrder])
+      .select(`
+        *,
+        products (name, unit_price),
+        customers (full_name)
+      `)
+      .single();
+
+    if (error) {
+      toast.error("Error: " + error.message);
+    } else {
+      toast.success("New order added successfully!");
+
+      if (onRefresh) onRefresh();
+
+      setTimeout(() => {
+        apiRef.current.scrollToIndexes({ rowIndex: 0 });
+        apiRef.current.startCellEditMode({ id: data.id, field: 'product_name' });
+      }, 800);
+    }
   };
 
   return (
@@ -163,12 +225,27 @@ export default function OrdersTable(props: OrdersTableProps) {
           overflow: 'hidden',
           boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)'
         }}>
-          <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              {userRole === 'ADMIN' ? 'All Orders' : 'My Orders'}
-            </Typography>
-            <Typography variant="body2" color="textSecondary">{rowCount} orders found</Typography>
+          <Box sx={{ p: 3, borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                {userRole === 'ADMIN' ? 'All Orders' : 'My Orders'}
+              </Typography>
+              <Typography variant="body2" color="textSecondary">{rowCount} orders found</Typography>
+            </Box>
+
+            {userRole === 'ADMIN' && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleQuickAdd}
+                sx={{ borderRadius: '8px', textTransform: 'none', fontWeight: 600 }}
+              >
+                Quick Add Row
+              </Button>
+            )}
           </Box>
+
           <DataGrid
             apiRef={apiRef}
             rows={rows}
@@ -176,10 +253,28 @@ export default function OrdersTable(props: OrdersTableProps) {
             processRowUpdate={processRowUpdate}
             onProcessRowUpdateError={(error) => console.log(error)}
             onCellClick={(params) => {
-              if (params.field === 'status' && userRole === 'ADMIN') {
-                if (params.cellMode === 'view') {
-                  apiRef.current.startCellEditMode({ id: params.id, field: params.field });
-                }
+              if (userRole === 'ADMIN' && params.isEditable && params.cellMode === 'view') {
+                apiRef.current.startCellEditMode({ id: params.id, field: params.field });
+              }
+            }}
+            onCellEditStop={(params) => {
+              if (params.field === 'quantity') {
+                setTimeout(() => {
+                  const editValue = apiRef.current.getCellValue(params.id, 'quantity');
+                  const currentRow = apiRef.current.getRow(params.id);
+
+                  const product = products.find(p => p.id === currentRow.product_id);
+
+                  if (product && editValue) {
+                    const newTotal = product.unit_price * Number(editValue);
+
+                    apiRef.current.setEditCellValue({
+                      id: params.id,
+                      field: 'total_price',
+                      value: newTotal
+                    });
+                  }
+                }, 0);
               }
             }}
             sortingMode="server"

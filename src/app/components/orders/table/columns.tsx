@@ -2,7 +2,9 @@ import React from 'react';
 import { GridColDef, GridRenderEditCellParams, useGridApiContext } from '@mui/x-data-grid';
 import { Chip, IconButton, Box, Typography, Select, MenuItem, SelectChangeEvent } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
-import { Order, getStatusColor, OrderStatus } from '@/app/types/types';
+import { Order, getStatusColor, OrderStatus, Product, Customer } from '@/app/types/types';
+import { ProductEditCell } from '@/app/components/orders/table/ProductEditCell';
+import { CustomerEditCell } from '@/app/components/orders/table/CustomerEditCell';
 
 const STATUS_OPTIONS: OrderStatus[] = ['CREATED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELED'];
 
@@ -47,7 +49,9 @@ const StatusEditCell = (params: GridRenderEditCellParams) => {
 };
 
 export const getColumns = (
-    handleMenuOpen: (e: React.MouseEvent<HTMLElement>, id: string) => void
+    handleMenuOpen: (e: React.MouseEvent<HTMLElement>, id: string) => void,
+    products: Product[],
+    customers: Customer[]
 ): GridColDef<Order>[] => [
         {
             field: 'id',
@@ -72,6 +76,8 @@ export const getColumns = (
             sortable: true,
             filterable: false,
             hideable: false,
+            editable: true,
+            renderEditCell: (params) => { return <ProductEditCell {...params} products={products} />; }
         },
         {
             field: 'customer_name',
@@ -80,6 +86,8 @@ export const getColumns = (
             sortable: true,
             filterable: false,
             hideable: false,
+            editable: true,
+            renderEditCell: (params) => <CustomerEditCell {...params} customers={customers} />,
         },
         {
             field: 'delivery_address',
@@ -87,6 +95,7 @@ export const getColumns = (
             minWidth: 180,
             filterable: false,
             hideable: false,
+            editable: true,
             valueFormatter: (value) => value ?? '-',
         },
         {
@@ -142,6 +151,7 @@ export const getColumns = (
             sortable: false,
             filterable: false,
             hideable: false,
+            editable: false,
             valueFormatter: (value) => `$${Number(value).toFixed(2)}`,
             renderCell: (params) => (
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', height: '100%', width: '100%' }}>

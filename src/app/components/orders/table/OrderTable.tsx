@@ -2,8 +2,9 @@
 
 import { useState, useMemo, ChangeEvent, useEffect } from 'react';
 import { DataGrid, GridSortModel, useGridApiRef } from '@mui/x-data-grid';
-import { Button } from '@mui/material';
+import { Button, TextField, InputAdornment, CircularProgress } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { Box, Typography, useMediaQuery, useTheme, Stack } from '@mui/material';
 import { toast } from 'react-hot-toast';
 
@@ -60,7 +61,10 @@ export default function OrdersTable(props: OrdersTableProps) {
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [customers, setCustomers] = useState<Customer[]>([]); //
+  const [customers, setCustomers] = useState<Customer[]>([]);
+
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,6 +76,63 @@ export default function OrdersTable(props: OrdersTableProps) {
     };
     fetchData();
   }, []);
+
+  const handleAiAdd = async () => {
+    if (!aiPrompt.trim()) return;
+    setIsAiLoading(true);
+
+    try {
+      const response = await fetch('/api/generate-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          products: products.map(p => ({ id: p.id, name: p.name, price: p.unit_price })),
+          customers: customers.map(c => ({ id: c.customer_uuid, name: c.full_name }))
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server Error:", errorData);
+        throw new Error(errorData.error || 'AI Error');
+      }
+
+      const result = await response.json();
+      const aiData = result.object;
+
+      if (aiData.product_id === 'NOT_FOUND' || aiData.customer_uuid === 'NOT_FOUND') {
+        const missingItem = aiData.product_id === 'NOT_FOUND' ? 'product' : 'customer';
+        toast.error(`AI could not find a matching ${missingItem} in the database.`);
+        setIsAiLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('orders')
+        .insert([{
+          product_id: aiData.product_id,
+          customer_uuid: aiData.customer_uuid,
+          quantity: aiData.quantity || 1,
+          total_price: aiData.total_price,
+          status: 'CREATED',
+          delivery_address: aiData.address || 'AI Generated Address',
+        }])
+        .select(`*, products (name, unit_price), customers (full_name)`)
+        .single();
+
+      if (error) throw error;
+
+      toast.success("AI: Order created successfully!");
+      setAiPrompt('');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error("Full error details:", err);
+      toast.error("AI failed to process the request.");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, id: string) => {
     setAnchorEl(event.currentTarget);
@@ -201,6 +262,49 @@ export default function OrdersTable(props: OrdersTableProps) {
         onReset={() => onFilterChange('', 'ALL')}
         userRole={userRole || ''}
       />
+
+      {userRole === 'ADMIN' && (
+        <Box sx={{
+          display: 'flex',
+          gap: 1,
+          mb: 3,
+          p: 2,
+          backgroundColor: '#f8fafc',
+          borderRadius: '12px',
+          border: '1px dashed #cbd5e1'
+        }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="AI Quick Add: 'John bought 2 laptops, address 123 Street'..."
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAiAdd()}
+            disabled={isAiLoading}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <AutoAwesomeIcon sx={{ color: '#8b5cf6' }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ backgroundColor: 'white' }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleAiAdd}
+            disabled={isAiLoading || !aiPrompt.trim()}
+            sx={{
+              textTransform: 'none',
+              minWidth: '120px',
+              backgroundColor: '#8b5cf6',
+              '&:hover': { backgroundColor: '#7c3aed' }
+            }}
+          >
+            {isAiLoading ? <CircularProgress size={20} color="inherit" /> : 'AI Add'}
+          </Button>
+        </Box>
+      )}
 
       {isMobile ? (
         <Stack spacing={2}>

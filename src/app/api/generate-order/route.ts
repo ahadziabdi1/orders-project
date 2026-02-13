@@ -1,4 +1,8 @@
-import { GoogleGenerativeAI, SchemaType, ResponseSchema } from "@google/generative-ai";
+import {
+  GoogleGenerativeAI,
+  SchemaType,
+  ResponseSchema,
+} from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!);
 
@@ -12,7 +16,13 @@ const schema: ResponseSchema = {
     total_price: { type: SchemaType.NUMBER },
     address: { type: SchemaType.STRING },
   },
-  required: ["product_id", "customer_uuid", "quantity", "total_price", "address"],
+  required: [
+    "product_id",
+    "customer_uuid",
+    "quantity",
+    "total_price",
+    "address",
+  ],
 };
 
 export async function POST(req: Request) {
@@ -20,7 +30,7 @@ export async function POST(req: Request) {
     const { prompt, products, customers } = await req.json();
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash", // Confirmed active model from your list
+      model: "gemini-2.5-flash", 
       generationConfig: {
         responseMimeType: "application/json",
         responseSchema: schema,
@@ -47,14 +57,13 @@ export async function POST(req: Request) {
 
     return new Response(JSON.stringify({ object: aiData }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     });
-
   } catch (error: any) {
     console.error("AI BACKEND ERROR:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), { 
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json" },
     });
   }
 }

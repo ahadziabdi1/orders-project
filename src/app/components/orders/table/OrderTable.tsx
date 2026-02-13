@@ -15,6 +15,7 @@ import { OrderMobileCard } from '@/app/components/orders/table/OrderMobileCard';
 import { ActionMenu, DeleteDialog } from '@/app/components/orders/table/OrderActions';
 import { deleteOrderAction } from '@/app/actions/orders';
 import OrderDetailsModal from '@/app/components/orders/OrderDetailsModal';
+import AIChatPanel from '@/app/components/chat/AIChatPanel';
 
 import { supabase } from '@/lib/supabaseClient';
 
@@ -262,6 +263,8 @@ export default function OrdersTable(props: OrdersTableProps) {
         onReset={() => onFilterChange('', 'ALL')}
         userRole={userRole || ''}
       />
+
+      <AIChatPanel tableData={rows} />
 
       {userRole === 'ADMIN' && (
         <Box sx={{

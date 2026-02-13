@@ -264,7 +264,9 @@ export default function OrdersTable(props: OrdersTableProps) {
         userRole={userRole || ''}
       />
 
-      <AIChatPanel tableData={rows} />
+      {userRole === 'ADMIN' && (
+        <AIChatPanel tableData={rows} />
+      )}
 
       {userRole === 'ADMIN' && (
         <Box sx={{

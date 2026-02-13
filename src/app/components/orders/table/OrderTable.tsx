@@ -284,12 +284,14 @@ export default function OrdersTable(props: OrdersTableProps) {
             onChange={(e) => setAiPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAiAdd()}
             disabled={isAiLoading}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <AutoAwesomeIcon sx={{ color: '#8b5cf6' }} />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <AutoAwesomeIcon sx={{ color: '#7c3aed' }} />
+                  </InputAdornment>
+                ),
+              },
             }}
             sx={{ backgroundColor: 'white' }}
           />

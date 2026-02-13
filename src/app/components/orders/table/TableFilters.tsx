@@ -34,12 +34,14 @@ export const TableFilters = ({
                         fullWidth
                         value={searchTerm}
                         onChange={onSearchChange}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchOutlined sx={{ color: '#64748b' }} />
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchOutlined sx={{ color: '#64748b' }} />
+                                    </InputAdornment>
+                                ),
+                            },
                         }}
                         sx={{
                             '& .MuiOutlinedInput-root': {

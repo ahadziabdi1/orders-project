@@ -3,163 +3,230 @@
 import { useChat } from "@ai-sdk/react";
 import { useRef, useEffect, useState } from "react";
 import {
-  Box,
-  Paper,
-  TextField,
-  IconButton,
-  Typography,
-  Fab,
+    Box,
+    Paper,
+    TextField,
+    IconButton,
+    Typography,
+    Fab,
+    Fade,
+    Avatar,
+    CircularProgress,
 } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
 import SendIcon from "@mui/icons-material/Send";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function AIChatPanel({ tableData }: { tableData: any[] }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState(""); // ✅ YOU manage input now
-  const scrollRef = useRef<HTMLDivElement>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [input, setInput] = useState("");
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, status } = useChat({
-    id: "ai-analytics-chat",
-  });
+    const { messages, sendMessage, status } = useChat({
+        id: "ai-analytics-chat",
+    });
 
-  const isLoading = status === "streaming" || status === "submitted";
+    const isLoading = status === "streaming" || status === "submitted";
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    // Auto-scroll to bottom
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({
+                top: scrollRef.current.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+    }, [messages, isLoading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!input.trim() || isLoading) return;
 
-    await sendMessage(
-      { text: input },
-      {
-        body: {
-          tableData, // ✅ sent correctly
-        },
-      }
-    );
+        const currentInput = input;
+        setInput("");
 
-    setInput(""); // clear input
-  };
+        await sendMessage(
+            { text: currentInput },
+            {
+                body: { tableData },
+            }
+        );
+    };
 
-  if (!isOpen) {
     return (
-      <Fab
-        color="primary"
-        sx={{ position: "fixed", bottom: 24, right: 24, bgcolor: "#8b5cf6" }}
-        onClick={() => setIsOpen(true)}
-      >
-        <ChatIcon />
-      </Fab>
+        <>
+            {!isOpen && (
+                <Fade in={!isOpen}>
+                    <Fab
+                        color="primary"
+                        sx={{
+                            position: "fixed",
+                            bottom: 24,
+                            right: 24,
+                            bgcolor: "#7c3aed",
+                            '&:hover': { bgcolor: "#6d28d9" }
+                        }}
+                        onClick={() => setIsOpen(true)}
+                    >
+                        <ChatIcon />
+                    </Fab>
+                </Fade>
+            )}
+
+            <Fade in={isOpen}>
+                <Paper
+                    elevation={6}
+                    sx={{
+                        position: "fixed",
+                        bottom: 24,
+                        right: 24,
+                        width: { xs: "calc(100% - 48px)", sm: 380 },
+                        height: 550,
+                        maxHeight: "80vh",
+                        display: "flex",
+                        flexDirection: "column",
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        zIndex: 1000,
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        boxShadow: "0 12px 40px rgba(0,0,0,0.12)",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            p: 2,
+                            background: "linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                        }}
+                    >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                            <Typography variant="subtitle1" fontWeight="700" lineHeight={1.2}>
+                                AI Assistant
+                            </Typography>
+                        </Box>
+                        <IconButton
+                            size="small"
+                            onClick={() => setIsOpen(false)}
+                            sx={{ color: "white", '&:hover': { bgcolor: "rgba(255,255,255,0.1)" } }}
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
+
+                    <Box
+                        ref={scrollRef}
+                        sx={{
+                            flexGrow: 1,
+                            overflowY: "auto",
+                            p: 2,
+                            bgcolor: "#fcfcfe",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                        }}
+                    >
+                        {messages.length === 0 && (
+                            <Box sx={{ textAlign: "center", mt: 4, px: 4, opacity: 0.6 }}>
+                                <Typography variant="body2">
+                                    Ask me anything about your data! Try "Summarize the current table."
+                                </Typography>
+                            </Box>
+                        )}
+
+                        {messages.map((m) => {
+                            const isUser = m.role === "user";
+                            const textContent = m.parts
+                                ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
+                                .map((p) => p.text)
+                                .join("");
+
+                            return (
+                                <Box
+                                    key={m.id}
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: isUser ? "flex-end" : "flex-start",
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            p: 1.5,
+                                            px: 2,
+                                            borderRadius: isUser ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
+                                            bgcolor: isUser ? "#7c3aed" : "white",
+                                            color: isUser ? "white" : "#334155",
+                                            maxWidth: "85%",
+                                            boxShadow: isUser ? "none" : "0 2px 8px rgba(0,0,0,0.05)",
+                                            border: isUser ? "none" : "1px solid #f1f5f9",
+                                        }}
+                                    >
+                                        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                                            {textContent}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            );
+                        })}
+
+                        {isLoading && (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, ml: 1 }}>
+                                <CircularProgress size={12} sx={{ color: "#8b5cf6" }} />
+                                <Typography variant="caption" color="textSecondary">
+                                    Analyzing data...
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+
+                    <Box
+                        component="form"
+                        onSubmit={handleSubmit}
+                        sx={{
+                            p: 2,
+                            bgcolor: "white",
+                            borderTop: "1px solid #f1f5f9",
+                        }}
+                    >
+                        <TextField
+                            fullWidth
+                            size="small"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Ask a question..."
+                            autoComplete="off"
+                            disabled={isLoading}
+                            sx={{
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: '12px',
+                                    bgcolor: '#f8fafc',
+                                    '& fieldset': { borderColor: 'transparent' },
+                                    '&:hover fieldset': { borderColor: '#e2e8f0' },
+                                    '&.Mui-focused fieldset': { borderColor: '#8b5cf6' },
+                                }
+                            }}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <IconButton
+                                            type="submit"
+                                            disabled={isLoading || !input.trim()}
+                                            sx={{
+                                                color: "#7c3aed",
+                                                '&.Mui-disabled': { color: "#cbd5e1" }
+                                            }}
+                                        >
+                                            <SendIcon fontSize="small" />
+                                        </IconButton>
+                                    ),
+                                },
+                            }}
+                        />
+                    </Box>
+                </Paper>
+            </Fade>
+        </>
     );
-  }
-
-  return (
-    <Paper
-      elevation={12}
-      sx={{
-        position: "fixed",
-        bottom: 24,
-        right: 24,
-        width: 380,
-        height: 500,
-        display: "flex",
-        flexDirection: "column",
-        borderRadius: "16px",
-        overflow: "hidden",
-        zIndex: 1000,
-        border: "1px solid #e2e8f0",
-      }}
-    >
-      {/* Header */}
-      <Box
-        sx={{
-          p: 2,
-          bgcolor: "#8b5cf6",
-          color: "white",
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography variant="subtitle1" fontWeight="600">
-          📊 AI Analitika
-        </Typography>
-        <IconButton
-          size="small"
-          onClick={() => setIsOpen(false)}
-          sx={{ color: "white" }}
-        >
-          <CloseIcon />
-        </IconButton>
-      </Box>
-
-      <Box ref={scrollRef} sx={{ flexGrow: 1, overflowY: "auto", p: 2, bgcolor: "#f8fafc" }}>
-  {messages.map((m) => (
-    <Box
-      key={m.id}
-      sx={{
-        display: "flex",
-        justifyContent: m.role === "user" ? "flex-end" : "flex-start",
-        mb: 2,
-      }}
-    >
-      <Box
-        sx={{
-          p: 1.5,
-          borderRadius: m.role === "user" ? "16px 16px 0 16px" : "16px 16px 16px 0",
-          bgcolor: m.role === "user" ? "#8b5cf6" : "white",
-          color: m.role === "user" ? "white" : "#1e293b",
-          maxWidth: "85%",
-        }}
-      >
-        <Typography variant="body2">
-          {m.parts
-            ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-            .map((p) => p.text)
-            .join('')}
-        </Typography>
-      </Box>
-    </Box>
-  ))}
-</Box>
-
-
-
-      {/* Input */}
-      <Box
-        component="form"
-        onSubmit={handleSubmit}
-        sx={{
-          p: 2,
-          bgcolor: "white",
-          borderTop: "1px solid #e2e8f0",
-        }}
-      >
-        <TextField
-          fullWidth
-          size="small"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Unesi pitanje..."
-          autoComplete="off"
-          InputProps={{
-            endAdornment: (
-              <IconButton
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                sx={{ color: "#8b5cf6" }}
-              >
-                <SendIcon />
-              </IconButton>
-            ),
-          }}
-        />
-      </Box>
-    </Paper>
-  );
 }

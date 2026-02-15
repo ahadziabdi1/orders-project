@@ -138,31 +138,26 @@ export default function AIChatPanel({ tableData }: { tableData: any[] }) {
 
                         {messages.map((m) => {
                             const isUser = m.role === "user";
+
                             const textContent = m.parts
-                                ?.filter((p): p is { type: "text"; text: string } => p.type === "text")
-                                .map((p) => p.text)
-                                .join("");
+                                ?.filter(part => part.type === "text")
+                                .map(part => (part as any).text)
+                                .join("") || (m as any).content || "";
+
+                            if (!textContent && !isUser) return null;
 
                             return (
-                                <Box
-                                    key={m.id}
-                                    sx={{
-                                        display: "flex",
-                                        justifyContent: isUser ? "flex-end" : "flex-start",
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            p: 1.5,
-                                            px: 2,
-                                            borderRadius: isUser ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
-                                            bgcolor: isUser ? "#7c3aed" : "white",
-                                            color: isUser ? "white" : "#334155",
-                                            maxWidth: "85%",
-                                            boxShadow: isUser ? "none" : "0 2px 8px rgba(0,0,0,0.05)",
-                                            border: isUser ? "none" : "1px solid #f1f5f9",
-                                        }}
-                                    >
+                                <Box key={m.id} sx={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start" }}>
+                                    <Box sx={{
+                                        p: 1.5,
+                                        px: 2,
+                                        borderRadius: isUser ? "20px 20px 4px 20px" : "20px 20px 20px 4px",
+                                        bgcolor: isUser ? "#7c3aed" : "white",
+                                        color: isUser ? "white" : "#334155",
+                                        maxWidth: "85%",
+                                        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                                        border: isUser ? "none" : "1px solid #f1f5f9",
+                                    }}>
                                         <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
                                             {textContent}
                                         </Typography>

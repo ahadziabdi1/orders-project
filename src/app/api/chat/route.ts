@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       - Be concise and professional.`,
     });
 
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("Internal Server Error:", error);
     return new Response("Error", { status: 500 });
